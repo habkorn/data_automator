@@ -53,6 +53,10 @@ class Const():
 
     EXCEL_TEMPLATEFOLDER="TDMS_CSI_ExcelTemplates"
 
+    EXCEL_RESULT_FILENAME="Result_Collection.xlsx"
+
+    EXCEL_CSV_AUTOMATOR_FILENAME="CSV_Automator.xlsm"
+
 # define Python user-defined exceptions
 class InvalidFilePathLengthException(Exception):
     "Raised when the max file path length is exceeded"
