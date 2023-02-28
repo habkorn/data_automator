@@ -58,9 +58,12 @@ class TDMS_EXCEL():
 
         self.df_load.columns=self.colNames
 
-        self.df_load= self.df_load.astype("float64") 
+        # self.df_load= self.df_load.astype("float64") 
 
-        self.df_load.to_csv(selectedDir + "/"+ tdms_fileName.split(".tdms")[0] + "--" + featureName +".txt", index=False)
+        
+        # 3. create the csv file
+
+        self.df_load.to_csv(selectedDir + "/"+ tdms_fileName.split(".tdms")[0] + "--" + featureName +".txt", index=False, na_rep='')
 
         self.df_load=None
         self.colNames=[]

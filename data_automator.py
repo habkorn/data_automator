@@ -77,7 +77,7 @@ class CSI_AUTOMATOR(QWidget):
         self.selectedDir=None
         # self.resize(737, 596)
 
-        self.setWindowTitle("Data Automator V1.0.2")
+        self.setWindowTitle("Data Automator V1.0.3")
         self.setWindowIcon(QtGui.QIcon("icon.png"))
 
         layout = QVBoxLayout()
@@ -142,9 +142,6 @@ class CSI_AUTOMATOR(QWidget):
         
 
     def selectionchange(self,i):
-
-
-        
 
         if self.combobox.currentText()==self.tdms_excel.title:
            
