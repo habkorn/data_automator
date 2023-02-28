@@ -41,7 +41,9 @@ class QTextEditLogger(logging.Handler):
 class CSI_AUTOMATOR(QWidget):
     def __init__(self):
         super().__init__()
-
+        # font
+        smallFont = QFont('Arial', 14)
+        bigFont = QFont('Arial', 20)
 
 
         self.tdms_excel=TDMS_EXCEL()
@@ -55,6 +57,9 @@ class CSI_AUTOMATOR(QWidget):
         self.window_width, self.window_height = 1000, 200
         self.setMinimumSize(self.window_width, self.window_height)
 
+        self.label2=QLabel("Found Templates:")
+        self.label2.setFont(smallFont)
+
         self.logTextBox = QTextEditLogger(self)
         # You can format what is printed to text box
         self.logTextBox.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
@@ -67,9 +72,7 @@ class CSI_AUTOMATOR(QWidget):
         # timer.start(1000)
         
         
-        # font
-        smallFont = QFont('Arial', 14)
-        bigFont = QFont('Arial', 20)
+
 
         self.selectedDir=None
         # self.resize(737, 596)
@@ -82,9 +85,9 @@ class CSI_AUTOMATOR(QWidget):
 
         self.options = (Const.OPTIONS)
 
-        self.label=QLabel("Choose action:")
-        self.label.setFont(smallFont)
-        layout.addWidget(self.label)
+        self.label1=QLabel("Choose action:")
+        self.label1.setFont(smallFont)
+        layout.addWidget(self.label1)
         
         self.combobox = QComboBox()
         self.combobox.currentIndexChanged.connect(self.selectionchange)
@@ -106,6 +109,11 @@ class CSI_AUTOMATOR(QWidget):
         self.btn.clicked.connect(self.launchButton)
         self.btn.setEnabled(False)
         
+        
+
+
+        layout.addWidget(self.label2)
+
 
         layout.addLayout(self.optionsLayout)
 
@@ -136,6 +144,8 @@ class CSI_AUTOMATOR(QWidget):
     def selectionchange(self,i):
 
 
+        
+
         if self.combobox.currentText()==self.tdms_excel.title:
            
 
@@ -145,6 +155,8 @@ class CSI_AUTOMATOR(QWidget):
             xlsxTemplateFiles = glob.glob(os.getcwd() + '/' + Const.EXCEL_TEMPLATEFOLDER + r'/*.xlsx')
 
             self.excelTemplateFilesPath = [item for item in xlsxTemplateFiles if not "~" in item]
+
+            self.label2.setText("Found Templates (" + str(len (self.excelTemplateFilesPath)) + ")")
             
             for file in self.excelTemplateFilesPath:
                 featureName=file.rsplit('\\')[-1].split(".")[0]
@@ -160,6 +172,8 @@ class CSI_AUTOMATOR(QWidget):
             for i in reversed(range(self.optionsLayout.count())): 
                 self.optionsLayout.itemAt(i).widget().setParent(None)
                 self.radioButtons=[]
+
+            self.label2.setText("Found Templates (0)")
 
 
     def launchButton(self):

@@ -1,0 +1,11 @@
+data_automator.exe
+data_automator.spec
+__pycache__/TDMS_EXCEL.cpython-39.pyc
+__pycache__/Util.cpython-39.pyc
+dist/data_automator.exe
+TDMS_CSI_ExcelTemplates/~$CSV_Automator.xlsm
+TDMS_CSI_ExcelTemplates/~$12V F2-F3.xlsx
+build/
+nptdms*
+Test/
+*.exe
