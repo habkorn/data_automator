@@ -95,6 +95,7 @@ class TDMS_EXCEL():
         wb=xw.Book(excelDestPath)
         macro=wb.macro("run_csv_to_excel")
         macro()
+        
         wb.close()
         
         # 3.  delete the excel macro file
