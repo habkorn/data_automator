@@ -57,6 +57,17 @@ class Const():
 
     EXCEL_CSV_AUTOMATOR_FILENAME="CSV_Automator.xlsm"
 
+    EXCEL_CSV_PROPERTIES_FILENAME="TDMS_PROPERTIES_for_"
+    # TDMS_PROPERTIES=['name', 'Bauteilnummer']
+
+
+class Functions:
+    def display_properties(tdms_object, level):
+        if tdms_object.properties:
+            print("properties:", level)
+            for prop, val in tdms_object.properties.items():
+                print("%s: %s" % (prop, val), level)
+
 # define Python user-defined exceptions
 class InvalidFilePathLengthException(Exception):
     "Raised when the max file path length is exceeded"
