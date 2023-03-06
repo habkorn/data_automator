@@ -1,6 +1,7 @@
 import sys, traceback
 import os
 import types
+import subprocess
 
 
 
@@ -77,7 +78,7 @@ class CSI_AUTOMATOR(QWidget):
         self.selectedDir=None
         # self.resize(737, 596)
 
-        self.setWindowTitle("Data Automator V1.0.4")
+        self.setWindowTitle("Data Automator V1.0.5")
         self.setWindowIcon(QtGui.QIcon("icon.png"))
 
         layout = QVBoxLayout()
@@ -151,7 +152,8 @@ class CSI_AUTOMATOR(QWidget):
 
             xlsxTemplateFiles = glob.glob(os.getcwd() + '/' + Const.EXCEL_TEMPLATEFOLDER + r'/*.xlsx')
 
-            self.excelTemplateFilesPath = [item for item in xlsxTemplateFiles if not "~" in item]
+            self.excelTemplateFilesPath = [item for item in xlsxTemplateFiles if not "~" in item ]
+            self.excelTemplateFilesPath = [item for item in self.excelTemplateFilesPath if not "Result_Collection_Template" in item]
 
             self.label2.setText("Found Templates (" + str(len (self.excelTemplateFilesPath)) + ")")
             
@@ -218,91 +220,84 @@ class CSI_AUTOMATOR(QWidget):
             logging.info("EXCEL Templates found in: " + str(os.getcwd()))
             for excelTemplateFile in self.excelTemplateFilesPath:
                 logging.info(str(excelTemplateFile))
-
-            logging.info(str(len(self.excelTemplateFilesPath)) + " EXCEL Templates File(s) found.")   
+            logging.info("and ./Result_Collection_Template.xlsx")
             
-            featureSelected=""
+            logging.info(str(len(self.excelTemplateFilesPath)+1) + " EXCEL Templates File(s) found.")   
+            
+            featureName=""
             for rb in self.radioButtons:
                 if rb.isChecked(): 
-                    featureSelected=rb.feature
+                    featureName=rb.feature
                     logging.info("Template for " + str(rb.feature) + " will be processed.")
 
-            if featureSelected=="": 
+            if featureName=="": 
                 logging.warning("No Template was selected. Please select one.")
                 return
 
-            # for item in self.excelTemplateFilesPath:
-            #     if  rb.feature in item: 
-            
-            # excelTemplateFilePath=(item for item in self.excelTemplateFilesPath: rb.feature in item)
 
-            excelTemplateFilePath = [x for x in self.excelTemplateFilesPath if featureSelected in x]
+            excelTemplateFilePath = [x for x in self.excelTemplateFilesPath if featureName in x]
             excelTemplateFilePath=excelTemplateFilePath[0]
+
+
             # if all conditions are met: do the process
-            
-             
+                         
             try:  
 
                 # 0. write tdms properties to a text file
                 num=0
-                tdmspropertiesFilepath=self.selectedDir + "/" + Const.EXCEL_CSV_PROPERTIES_FILENAME +  mst_name + "--" + featureSelected + ".dat"
-                # delete the excel properties file (if it exists)
+             
+                # delete the Result_Collection file (if it exists)
                 try:
-                    os.remove(tdmspropertiesFilepath)
+                    resFiles = glob.glob(self.selectedDir + r'/Result_Collection--' + mst_name + r'.xlsx')
+                    if not len(resFiles)==0: os.remove((resFiles[0]).replace("/","\\"))
                 except OSError:
-                    pass
+                    logging.warning("delete went bad on the Result_Collection file")
+                    
+                        
+                # 1. convert_data_to_csv
+                for tdmsFile in tdmsFiles: 
+
+                    startTimeLoadFile = time.time()
+                    logging.info("Processing started, please wait...")
+
+                    with TdmsFile.read(tdmsFile, memmap_dir=os.getcwd()) as tdms_file:
+                        endTimeLoadTime = time.time()
+                            
+                        tdmsFileName=tdmsFile.rsplit('\\')[-1]
+                        csvFilepath=self.tdms_excel.convert_data_to_csv(featureName,self.selectedDir,tdmsFileName, tdms_file)
+
+                        logging.info("CSV File created in "+str(round(time.time()-startTimeLoadFile,1)) +"s : " + tdmsFileName.split(".tdms")[0] + "--" + featureName + ".txt ")
+        
+                        excelDestPath=self.selectedDir + "/"+ featureName +  "--" + tdmsFileName.split(".tdms")[0]  + ".xlsx"
+                        
+                        exceldataDestPath=self.tdms_excel.copy_template_excel_file(excelDestPath, excelTemplateFilePath)
+                        
+                        # Process events between short sleep periods
+                        QtWidgets.QApplication.processEvents()
+                        # time.sleep(0.1)
+                        logging.info("Create Excel file...")
+                        QtWidgets.QApplication.processEvents()
+                        data_from_csv = self.tdms_excel.get_csv_data(csvFilepath)
+
+                        # delete the csv file (if it exists)
+                        os.remove(csvFilepath)
+
+                        result_dict=self.tdms_excel.write_data_to_excel_template(exceldataDestPath, data_from_csv,featureName,tdms_file)
+
+                        logging.info("...done.")
+
                 
+                # 2. run the result collection 
+
+                excelDestPath=self.selectedDir + "/"+ "Result_Collection" +  "--" + mst_name  + ".xlsx"
                 
-                with open(tdmspropertiesFilepath, 'a') as prop_file:
-                    
-                    # 1. convert_data_to_csv
-                    for tdmsFile in tdmsFiles: 
-
-                        startTimeLoadFile = time.time()
-                        logging.info("Processing started, please wait...")
-
-                        with TdmsFile.read(tdmsFile, memmap_dir=os.getcwd()) as tdms_file:
-                            endTimeLoadTime = time.time()
-                                
-                            tdmsFileName=tdmsFile.rsplit('\\')[-1]
-                            csvFilepath=self.tdms_excel.convert_data_to_csv(featureSelected,self.selectedDir,tdmsFileName, tdms_file)
-
-                            logging.info("CSV File created in "+str(round(time.time()-startTimeLoadFile,1)) +"s : " + tdmsFileName.split(".tdms")[0] + "--" + featureSelected + ".txt ")
-            
-                            excelDestPath=self.tdms_excel.copy_template_excel_file(self.selectedDir,tdmsFileName,featureSelected,excelTemplateFilePath)
-                            
-                            # Process events between short sleep periods
-                            QtWidgets.QApplication.processEvents()
-                            # time.sleep(0.1)
-                            logging.info("Create Excel file...")
-                            QtWidgets.QApplication.processEvents()
-                            data_from_csv = self.tdms_excel.open_csv_file(csvFilepath)
-                            self.tdms_excel.write_list_to_excel(excelDestPath, data_from_csv)
-                            logging.info("...done.")
-
-
-                            
-                            # if num==0:
-                            #     for prop in tdms_file.properties.keys():
-                            #         prop_file.write(prop +",")
-
-                            #     prop_file.write("\n")
-                            
-                            # num=num+1        
-                            # for prop in tdms_file.properties.keys():
-                            #     prop_file.write(tdms_file.properties[prop] +",")
-                                    
-                            # prop_file.write("\n")
-                    
-                            
-
-                    
-                    # 2. run the excel macro
-
+                excelresultDestPath=self.tdms_excel.copy_template_excel_file(excelDestPath,os.getcwd() + '/' + Const.EXCEL_TEMPLATEFOLDER + r'/Result_Collection_Template.xlsx')
+                        
+                self.tdms_excel.write_result_to_excel_template(excelresultDestPath)
                 # logging.info("Starting Excel Macro Template execution. Please wait, this could take some time..")
                 # self.tdms_excel.run_excel_macro(self.selectedDir)
                 
-
+                
                 logging.info("FINISHED and DONE.")
 
             except InvalidFilePathLengthException:
@@ -314,6 +309,7 @@ class CSI_AUTOMATOR(QWidget):
                 # fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                 # print(exc_type, fname, exc_tb.tb_lineno)
                 # logging.error(str(exc_type) + ", File: " + str(fname) + ", Line: " + str(exc_tb.tb_lineno))
+                
                 msg= traceback.format_exc()
                 traceback.print_exc(file=sys.stdout)
 

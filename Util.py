@@ -53,12 +53,7 @@ class Const():
 
     EXCEL_TEMPLATEFOLDER="TDMS_CSI_ExcelTemplates"
 
-    EXCEL_RESULT_FILENAME="Result_Collection.xlsx"
 
-    EXCEL_CSV_AUTOMATOR_FILENAME="CSV_Automator.xlsm"
-
-    EXCEL_CSV_PROPERTIES_FILENAME="TDMS_PROPERTIES_for_"
-    # TDMS_PROPERTIES=['name', 'Bauteilnummer']
 
 
 class Functions:
