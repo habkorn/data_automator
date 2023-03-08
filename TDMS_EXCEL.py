@@ -48,6 +48,9 @@ class TDMS_EXCEL():
         try:
             shutil.copyfile(excelTemplateFilePath, excelDestPath)
         except PermissionError:
+            msg= traceback.format_exc()
+            traceback.print_exc(file=sys.stdout)
+            logging.warning(msg)
             pass #skip this error, will be handled later
 
         return excelDestPath
@@ -163,9 +166,11 @@ class TDMS_EXCEL():
             # Close Excel
             xl_app.quit()
         except:
+
+            logging.warning("write_result_to_excel_template: Access to Excel went bad. Check if excel instance is in zombie state (Task Manager).")
             msg= traceback.format_exc()
             traceback.print_exc(file=sys.stdout)
-            logging.warning("write_result_to_excel_template: Access to Excel went bad. Check if excel instance is in zombie state (Task Manager).")
+            logging.error(msg)
             xl_app.quit()
             raise Exception("location: write_result_to_excel_template")
 
@@ -255,6 +260,7 @@ class TDMS_EXCEL():
             # Close Excel
             msg= traceback.format_exc()
             traceback.print_exc(file=sys.stdout)
+            logging.warning(msg)
             logging.warning("write_data_to_excel_template: Access to Excel went bad. Check if excel instance is in zombie state (Task Manager).")
             xl_app.quit()
             raise Exception("location: write_data_to_excel_template")
