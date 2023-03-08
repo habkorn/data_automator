@@ -34,8 +34,8 @@ class TDMS_EXCEL():
         logging.info('TDMS to Excel data procedure selected')
 
 
-        self.startRow=5
-        self.startColumn=3
+        self.startRowInResultsFile=5
+        self.startColumnInResultsFile=3
 
 
     def copy_template_excel_file(self,excelDestPath,excelTemplateFilePath):
@@ -129,8 +129,8 @@ class TDMS_EXCEL():
             # Assign the sheet holding the template table to a variable
             ws = wb.sheets('Result')
 
-            row = self.startRow
-            column = self.startColumn
+            row = self.startRowInResultsFile
+            column = self.startColumnInResultsFile
             # 1. Insert data to the Result Worksheet
             
             ws.range((row-1, column)).value="Link"
@@ -151,10 +151,12 @@ class TDMS_EXCEL():
                     row=row+1
 
                 column=column+1
-                row = self.startRow
+                row = self.startRowInResultsFile
 
 
             ws.range("C:C").column_width = 26
+
+            ws.autofit(axis="rows")
             # ws.autofit(axis="columns")
            
 
