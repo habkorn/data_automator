@@ -215,6 +215,19 @@ class CSI_AUTOMATOR(QWidget):
         proxy = ProxyModel(dialog)
         dialog.setProxyModel(proxy)
 
+        # sidebar links
+        urls = []
+        urls.append(QUrl.fromLocalFile(os.path.expanduser('~')))
+        urls.append(QUrl.fromLocalFile(settings_data["lastDir"]))
+
+        urls.append(QUrl.fromLocalFile(QStandardPaths.writableLocation(QStandardPaths.DesktopLocation)))
+        urls.append(QUrl.fromLocalFile(QStandardPaths.writableLocation(QStandardPaths.HomeLocation)))
+        urls.append(QUrl.fromLocalFile(QStandardPaths.writableLocation(QStandardPaths.DownloadLocation)))
+
+        urls.append(QUrl.fromLocalFile("F:\\Entwicklung"))
+        urls.append(QUrl.fromLocalFile("K:\\"))
+
+        dialog.setSidebarUrls(urls)
 
 
         # dialog.setFileMode(QFileDialog.DirectoryOnly)
