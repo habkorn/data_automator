@@ -34,8 +34,8 @@ class TDMS_EXCEL():
         logging.info('TDMS to Excel data procedure selected')
 
 
-        self.startRowInResultsFile=5
-        self.startColumnInResultsFile=3
+        self.startRowInResultsFile=3
+        self.startColumnInResultsFile=2
 
 
     def copy_template_excel_file(self,excelDestPath,excelTemplateFilePath):
@@ -133,31 +133,41 @@ class TDMS_EXCEL():
             column = self.startColumnInResultsFile
             # 1. Insert data to the Result Worksheet
             
-            ws.range((row-1, column)).value="Link"
+            ws.range((row, column-1)).value="Link"
 
             for item in self.resultDict.keys():
 
-                ws.range((row-1, column+1)).add_hyperlink(item)
-
                 for iitem in self.resultDict[item].keys():
+                    # write the label
+                    if row==self.startRowInResultsFile:ws.range((row, column)).value = iitem
+                    # write the value
+                    ws.range((row+1, column)).value = self.resultDict[item][iitem]
 
-                    if column==3:ws.range((row, column)).value = iitem
+   
+                    if row==self.startRowInResultsFile+1: ws.autofit(axis="columns")
 
-                    ws.range((row, column+1)).value = self.resultDict[item][iitem]
-                    ws.range((row, column+1)).api.WrapText = True
-                    ws.range((row-1, column+1)).api.WrapText = True
-                    ws.range((row, column+1)).column_width = 40
-                    ws.range((row, column+1)).row_height = 40
-                    row=row+1
+                    # ws.range((row, column+1)).api.WrapText = True
+                    # ws.range((row-1, column+1)).api.WrapText = True
+                    # ws.range((row, column+1)).column_width = 40
+                    # ws.range((row, column+1)).row_height = 40
+                    column=column+1
 
-                column=column+1
-                row = self.startRowInResultsFile
+                column = self.startColumnInResultsFile
+                
+                ws.range((row+1, column-1)).add_hyperlink(item)  
+                ws.range((row+1, column-1)).api.WrapText = True  
+                ws.range((row+1, column-1)).column_width = 26
+                ws.range((row+1, column-1)).row_height = 21
 
 
-            ws.range("C:C").column_width = 26
+                row=row+1
+                
 
-            ws.autofit(axis="rows")
-            # ws.autofit(axis="columns")
+
+            # ws.range("A:A").column_width = 26
+
+            # ws.autofit(axis="rows")
+            
            
 
             # Save and Close the Excel template file
