@@ -348,7 +348,7 @@ class CSI_AUTOMATOR(QWidget):
                 
                 # 2. run the result collection 
 
-                excelDestPath=(self.selectedDir + "/"+ "Result_Collection" +  "--" + mst_name  + ".xlsx").replace("/","\\")
+                excelDestPath=(self.selectedDir + "/"+ "Result_Collection" +  "--" + mst_name + " -- "  + featureName + ".xlsx").replace("/","\\")
                 
                 excelresultDestPath=self.tdms_excel.copy_template_excel_file(excelDestPath,(self.workingDir + Const.EXCEL_TEMPLATEFOLDER + r'/Result_Collection_Template.xlsx').replace("/","\\"))
                 
