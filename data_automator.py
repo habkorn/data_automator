@@ -271,7 +271,7 @@ class CSI_AUTOMATOR(QWidget):
             logging.info("EXCEL Templates found in: " + str(os.getcwd()))
             for excelTemplateFile in self.excelTemplateFilesPath:
                 logging.info(str(excelTemplateFile))
-            logging.info("and ./Result_Collection_Template.xlsx")
+            logging.info("and ./" + Const.EXCEL_RESULT_FILENAME )
             
             logging.info(str(len(self.excelTemplateFilesPath)+1) + " EXCEL Templates File(s) found.")   
             
@@ -348,9 +348,9 @@ class CSI_AUTOMATOR(QWidget):
                 
                 # 2. run the result collection 
 
-                excelDestPath=(self.selectedDir + "/"+ "Result_Collection" +  "--" + mst_name + " -- "  + featureName + ".xlsx").replace("/","\\")
+                excelDestPath=(self.selectedDir + "/"+ "Result_Collection" +  "--" + mst_name + " -- "  + featureName + ".xlsm").replace("/","\\")
                 
-                excelresultDestPath=self.tdms_excel.copy_template_excel_file(excelDestPath,(self.workingDir + Const.EXCEL_TEMPLATEFOLDER + r'/Result_Collection_Template.xlsx').replace("/","\\"))
+                excelresultDestPath=self.tdms_excel.copy_template_excel_file(excelDestPath,(self.workingDir + Const.EXCEL_TEMPLATEFOLDER + '/' + Const.EXCEL_RESULT_FILENAME).replace("/","\\"))
                 
                 logging.info("Result Generation started. File: " + excelresultDestPath)       
                 self.tdms_excel.write_result_to_excel_template(excelresultDestPath)
