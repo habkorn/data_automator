@@ -67,6 +67,8 @@ class CSI_AUTOMATOR(QWidget):
         # You can format what is printed to text box
         self.logTextBox.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
         logging.getLogger().addHandler(self.logTextBox)
+
+
         # You can control the logging level
         logging.getLogger().setLevel(logging.INFO)
         
@@ -80,7 +82,7 @@ class CSI_AUTOMATOR(QWidget):
         self.selectedDir=None
         # self.resize(737, 596)
 
-        self.setWindowTitle("Data Automator V1.1.1")
+        self.setWindowTitle("Data Automator V1.1.2")
         self.setWindowIcon(QtGui.QIcon("icon.png"))
 
         layout = QVBoxLayout()
@@ -251,9 +253,16 @@ class CSI_AUTOMATOR(QWidget):
             json.dump(self.jsonDict, settings_file, indent = 6)
             settings_file.close()
 
+
+            logging.basicConfig(filename=self.selectedDir + "/"+ "Log.txt", 
+                                format='%(asctime)s %(message)s', 
+                                filemode='a') 
+
             # self.selectedDir="F:/ENTWICKLUNG/SSC019 CSI 3 Modul/04 Erprobungen/02 Interne Prüfberichte/MST2022081100_SSC018-SSC019_DV2_CSI3_KompressorModul/Ergebnisse/L1 - Lebensdauerprüfung/12V/Thomas DV2 tdms/Run1"
     
             logging.info("Selected Dir: " + self.selectedDir)
+
+
 
             # search for all TDMS files within selected directory
             tdmsFiles = glob.glob(self.selectedDir + r'/*.tdms')
@@ -316,8 +325,9 @@ class CSI_AUTOMATOR(QWidget):
 
                     startTimeLoadFile = time.time()
 
+
                     with TdmsFile.read(tdmsFile, memmap_dir=os.getcwd()) as tdms_file:
-                        endTimeLoadTime = time.time()
+                        
                             
                         tdmsFileName=tdmsFile.rsplit('\\')[-1]
                         csvFilepath=self.tdms_excel.convert_data_to_csv(featureName,self.selectedDir,tdmsFileName, tdms_file)
@@ -334,6 +344,8 @@ class CSI_AUTOMATOR(QWidget):
                         # time.sleep(0.1)
                         logging.info(str(num)+ "/" + str(len(tdmsFiles))+ ": Create Excel file...")
                         
+                        startTimeLoadFile = time.time()
+
                         data_from_csv = self.tdms_excel.get_csv_data(csvFilepath)
 
                         # delete the csv file (if it exists)
@@ -341,7 +353,7 @@ class CSI_AUTOMATOR(QWidget):
 
                         result_dict=self.tdms_excel.write_data_to_excel_template(exceldataDestPath, data_from_csv,featureName,tdms_file)
 
-                        logging.info("...done.")
+                        logging.info("...done in "+ str(round(time.time()-startTimeLoadFile,1)) +"s : Filename: " + exceldataDestPath)
 
                         num=num+1
 

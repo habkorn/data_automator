@@ -56,6 +56,8 @@ class Const():
 
     EXCEL_RESULT_FILENAME="Result_Collection_Template.xlsm"
 
+    EXCEL_MAX_ROWS=1048576
+
 
 class Functions:
     def display_properties(tdms_object, level):

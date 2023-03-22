@@ -82,7 +82,12 @@ class TDMS_EXCEL():
 
         # self.df_load= self.df_load.astype("float64") 
 
-
+        if len(self.df_load)>=Const.EXCEL_MAX_ROWS-10:
+            logging.critical("The number of rows in the TDMS exceeds the maximum rows allowable in Excel (" + str(Const.EXCEL_MAX_ROWS) + ")")
+            logging.critical("The evaluation will continue by DISCARDING the excess rows at the end of the TDMS file.")
+            
+            # cut off the excess rows (and some)
+            self.df_load=self.df_load.head(Const.EXCEL_MAX_ROWS - 10)
         
         # 3. create the csv file
 
@@ -267,6 +272,10 @@ class TDMS_EXCEL():
                 [newHeaderList.append(item.replace(str,"")) for item in data_to_insert[0] if str in item]
         
             data_to_insert[0]=newHeaderList
+
+            # wb.sheets('Source').range('A1').end('down').end('right')
+
+            # ws.range((row, column)).value=wb.sheets('Source').used_range.value
     
             ws.range((row, column)).value = data_to_insert
 
