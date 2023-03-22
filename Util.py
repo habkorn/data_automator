@@ -58,6 +58,8 @@ class Const():
 
     EXCEL_MAX_ROWS=1048576
 
+    EXCEL_MAX_CHUNK_SIZE = 10000
+
 
 class Functions:
     def display_properties(tdms_object, level):

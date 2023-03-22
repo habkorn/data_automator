@@ -82,7 +82,7 @@ class CSI_AUTOMATOR(QWidget):
         self.selectedDir=None
         # self.resize(737, 596)
 
-        self.setWindowTitle("Data Automator V1.1.2")
+        self.setWindowTitle("Data Automator V1.2.0")
         self.setWindowIcon(QtGui.QIcon("icon.png"))
 
         layout = QVBoxLayout()

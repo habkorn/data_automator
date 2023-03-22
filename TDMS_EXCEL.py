@@ -83,8 +83,8 @@ class TDMS_EXCEL():
         # self.df_load= self.df_load.astype("float64") 
 
         if len(self.df_load)>=Const.EXCEL_MAX_ROWS-10:
-            logging.critical("The number of rows in the TDMS exceeds the maximum rows allowable in Excel (" + str(Const.EXCEL_MAX_ROWS) + ")")
-            logging.critical("The evaluation will continue by DISCARDING the excess rows at the end of the TDMS file.")
+            logging.critical("The number of rows in current TDMS file exceeds the maximum rows allowable in Excel (" + str(Const.EXCEL_MAX_ROWS) + ")")
+            logging.critical("The program will save the current Excel file anyway, DISCARDING the excess rows.")
             
             # cut off the excess rows (and some)
             self.df_load=self.df_load.head(Const.EXCEL_MAX_ROWS - 10)
@@ -233,6 +233,19 @@ class TDMS_EXCEL():
             xl_app.quit()
             raise Exception("location: write_result_to_excel_template")
 
+    def dump_large_array_to_excel(self, ws, startrow, startcolumn, data_to_insert):
+
+        row=startrow
+        col=startcolumn
+        
+        if len(data_to_insert) <= (Const.EXCEL_MAX_CHUNK_SIZE + 1):
+            ws.range((row, col)).value = data_to_insert
+        else:
+            for chunk in (data_to_insert[rw:rw + Const.EXCEL_MAX_CHUNK_SIZE] 
+                for rw in range(0, len(data_to_insert), Const.EXCEL_MAX_CHUNK_SIZE)):
+                    # ws.range('Source', row + str(column), index = False, header = False).value = chunk
+                    ws.range((row,col)).value = chunk
+                    row += Const.EXCEL_MAX_CHUNK_SIZE
 
 
     def write_data_to_excel_template(self, template_file, data_to_insert, featureName,tdms_file):
@@ -257,7 +270,8 @@ class TDMS_EXCEL():
             row = 1
             column = 1
             # 1. Insert ALL data to the Source Worksheet
-            ws.range((row, column)).value = data_to_insert
+            self.dump_large_array_to_excel(ws, row, column, data_to_insert)
+
             ws.autofit(axis="columns")
 
             # 2. do the same for the secified worksheet, except only the colums with useful data
@@ -277,7 +291,8 @@ class TDMS_EXCEL():
 
             # ws.range((row, column)).value=wb.sheets('Source').used_range.value
     
-            ws.range((row, column)).value = data_to_insert
+            self.dump_large_array_to_excel(ws, row, column, data_to_insert)
+
 
              # erase unuseful range in excel, e.g. exclude columns "F" to "P"
 
