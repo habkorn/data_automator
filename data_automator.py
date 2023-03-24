@@ -18,7 +18,7 @@ from PyQt5.QtGui import *
 
 import logging
 import time, json
-from Util import Const, InvalidFilePathLengthException, ProxyModel
+from Util import Const,InvalidFilePathLengthException, ProxyModel
 import os.path
 
 
@@ -75,6 +75,9 @@ class CSI_AUTOMATOR(QWidget):
         # timer = QtCore.QTimer(self)
         # timer.timeout.connect(self.doTimer)
         # timer.start(1000)
+        
+        
+
 
         self.selectedDir=None
         # self.resize(737, 596)
@@ -251,11 +254,9 @@ class CSI_AUTOMATOR(QWidget):
             settings_file.close()
 
 
-            # logging.basicConfig(filename=self.selectedDir + "/"+ "Log.txt", 
-            #                     format='%(asctime)s %(message)s', 
-            #                     filemode='a', force=True) 
-
-            
+            logging.basicConfig(filename=self.selectedDir + "/"+ "Log.txt", 
+                                format='%(asctime)s %(message)s', 
+                                filemode='a') 
 
             # self.selectedDir="F:/ENTWICKLUNG/SSC019 CSI 3 Modul/04 Erprobungen/02 Interne Prüfberichte/MST2022081100_SSC018-SSC019_DV2_CSI3_KompressorModul/Ergebnisse/L1 - Lebensdauerprüfung/12V/Thomas DV2 tdms/Run1"
     
@@ -324,15 +325,11 @@ class CSI_AUTOMATOR(QWidget):
 
                     startTimeLoadFile = time.time()
 
-                    tdmsFileName=tdmsFile.rsplit('\\')[-1]
-
-                    logging.info(" ")
-                    logging.info("-------------------")
-                    logging.info(str(num)+ "/" + str(len(tdmsFiles)) + ".Reading TDMS: " + tdmsFileName)
 
                     with TdmsFile.read(tdmsFile, memmap_dir=os.getcwd()) as tdms_file:
                         
-
+                            
+                        tdmsFileName=tdmsFile.rsplit('\\')[-1]
                         csvFilepath=self.tdms_excel.convert_data_to_csv(featureName,self.selectedDir,tdmsFileName, tdms_file)
 
                         logging.info(" CSV File created in "+str(round(time.time()-startTimeLoadFile,1)) +"s : " + tdmsFileName.split(".tdms")[0] + "--" + featureName + ".txt ")
@@ -345,7 +342,7 @@ class CSI_AUTOMATOR(QWidget):
                         # Process events between short sleep periods
                         QtWidgets.QApplication.processEvents()
                         # time.sleep(0.1)
-                        
+                        logging.info(str(num)+ "/" + str(len(tdmsFiles))+ ": Create Excel file...")
                         
                         startTimeLoadFile = time.time()
 
@@ -354,7 +351,6 @@ class CSI_AUTOMATOR(QWidget):
                         # delete the csv file (if it exists)
                         os.remove(csvFilepath)
 
-                        logging.info(": Create Excel file...")
                         result_dict=self.tdms_excel.write_data_to_excel_template(exceldataDestPath, data_from_csv,featureName,tdms_file)
 
                         logging.info("...done in "+ str(round(time.time()-startTimeLoadFile,1)) +"s : Filename: " + exceldataDestPath)
