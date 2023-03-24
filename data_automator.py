@@ -259,7 +259,8 @@ class CSI_AUTOMATOR(QWidget):
             json.dump(self.jsonDict, settings_file, indent = 6)
             settings_file.close()
 
-            fh = logging.FileHandler(filename=self.selectedDir + "/"+ "Log.txt")
+            fh = logging.FileHandler(filename=self.selectedDir + "/"+ "Log.txt", mode="a")
+           
             fh.setFormatter(self.log_formatter)
           
 
