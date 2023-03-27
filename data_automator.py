@@ -115,10 +115,10 @@ class CSI_AUTOMATOR(QWidget):
 
 
 
-        self.btn = QPushButton('Launch')
-        self.btn.setFont(bigFont)
-        self.btn.clicked.connect(self.launchButton)
-        self.btn.setEnabled(False)
+        self.launch_btn = QPushButton('Launch')
+        self.launch_btn.setFont(bigFont)
+        self.launch_btn.clicked.connect(self.launchButton)
+        self.launch_btn.setEnabled(False)
         
         
 
@@ -128,7 +128,7 @@ class CSI_AUTOMATOR(QWidget):
 
         layout.addLayout(self.optionsLayout)
 
-        layout.addWidget(self.btn)
+        layout.addWidget(self.launch_btn)
 
         layout.addWidget(self.logTextBox.widget)
 
@@ -148,7 +148,7 @@ class CSI_AUTOMATOR(QWidget):
     def radioClicked(self):
         radioButton = self.sender()
         if radioButton.isChecked():
-            self.btn.setEnabled(True)
+            self.launch_btn.setEnabled(True)
             print("feature is %s" % (radioButton.feature))
         
 
@@ -250,6 +250,9 @@ class CSI_AUTOMATOR(QWidget):
         # dialog.selectNameFilter("TDMS Files (*.tdms)")
 
         if dialog.exec_() == QFileDialog.Accepted:
+
+            self.launch_btn.setEnabled(False)
+
             self.selectedDir = dialog.selectedFiles()[0]
 
             # write the selected in a JSON file
@@ -262,11 +265,6 @@ class CSI_AUTOMATOR(QWidget):
             fh = logging.FileHandler(filename=self.selectedDir + "/"+ "Log.txt", mode="a")
            
             fh.setFormatter(self.log_formatter)
-          
-
-            # logging.basicConfig(filename=self.selectedDir + "/"+ "Log.txt", 
-            #                     format='%(asctime)s %(message)s', 
-            #                     filemode='a') 
             
             logging.getLogger().addHandler(fh)
 
@@ -320,7 +318,7 @@ class CSI_AUTOMATOR(QWidget):
              
                 # delete the Result_Collection file (if it exists)
                 try:
-                    resFiles = glob.glob(self.selectedDir + r'/Result_Collection--' + mst_name + r'.xlsx')
+                    resFiles = glob.glob(self.selectedDir + r'/Result_Collection' + mst_name + r'.xlsx')
                     if not len(resFiles)==0: os.remove((resFiles[0]).replace("/","\\"))
                 except OSError:
                     logging.warning("delete went bad on the Result_Collection file")
@@ -337,11 +335,16 @@ class CSI_AUTOMATOR(QWidget):
 
                     startTimeLoadFile = time.time()
 
+                    tdmsFileName=tdmsFile.rsplit('\\')[-1]
+
+                    logging.info(" ")
+                    logging.info("-------------------")
+                    logging.info("File " + str(num)+ "/" + str(len(tdmsFiles)) + ". Reading TDMS: " + tdmsFileName)
+
 
                     with TdmsFile.read(tdmsFile, memmap_dir=os.getcwd()) as tdms_file:
                         
-                            
-                        tdmsFileName=tdmsFile.rsplit('\\')[-1]
+
                         csvFilepath=self.tdms_excel.convert_data_to_csv(featureName,self.selectedDir,tdmsFileName, tdms_file)
 
                         logging.info(" CSV File created in "+str(round(time.time()-startTimeLoadFile,1)) +"s : " + tdmsFileName.split(".tdms")[0] + "--" + featureName + ".txt ")
@@ -372,6 +375,9 @@ class CSI_AUTOMATOR(QWidget):
                 
                 # 2. run the result collection 
 
+                logging.info(" ")
+                logging.info("==============================")
+
                 excelDestPath=(self.selectedDir + "/"+ "Result_Collection" +  "--" + mst_name + " -- "  + featureName + ".xlsm").replace("/","\\")
                 
                 excelresultDestPath=self.tdms_excel.copy_template_excel_file(excelDestPath,(self.workingDir + Const.EXCEL_TEMPLATEFOLDER + '/' + Const.EXCEL_RESULT_FILENAME).replace("/","\\"))
@@ -381,7 +387,7 @@ class CSI_AUTOMATOR(QWidget):
                 # logging.info("Starting Excel Macro Template execution. Please wait, this could take some time..")
                 # self.tdms_excel.run_excel_macro(self.selectedDir)
                 
-                
+
                 logging.info("FINISHED and DONE.")
 
             except InvalidFilePathLengthException:
@@ -397,14 +403,14 @@ class CSI_AUTOMATOR(QWidget):
                 msg= traceback.format_exc()
                 traceback.print_exc(file=sys.stdout)
 
-               
+                self.launch_btn.setEnabled(True)
                 logging.error(msg)
 
                 return    
 
         else: self.selectedDir=None
 
-
+        self.launch_btn.setEnabled(True)
 
 
 if __name__ == '__main__':
