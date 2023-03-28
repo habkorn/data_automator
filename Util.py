@@ -1,5 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QIdentityProxyModel
+import logging
 from PyQt5.QtWidgets import QFileDialog, QWidget
 import sys,os
 
@@ -46,7 +47,7 @@ class Const():
     TDMS_CSI_DATA_DISCR={"Analog-IO":["Strom_Ebene_1","Spannung_Ebene_1","Druckspeicher_1","Maximaldruck_Leitung","Drehzahl","C","D","E","F","G","H","I","J","K","L","M"],
                          "TC":["TC_Zylinder","TC_Motor","TC_Gehaeuse","TC_Druckspeicher"]}
 
-    MAX_PATHLENGTH_DOS=259
+    MAX_PATHLENGTH_DOS=240
 
     TDMS_LIST_SEP=" --> "
 
@@ -70,7 +71,6 @@ class Functions:
 
 # define Python user-defined exceptions
 class InvalidFilePathLengthException(Exception):
-    "Raised when the max file path length is exceeded"
     pass
 
 

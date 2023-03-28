@@ -43,15 +43,18 @@ class TDMS_EXCEL():
 
         excelDestPath.replace("/","\\")
 
-        if len(excelDestPath)>Const.MAX_PATHLENGTH_DOS: raise InvalidFilePathLengthException
+        
 
         try:
+            if len(excelDestPath)>Const.MAX_PATHLENGTH_DOS: raise InvalidFilePathLengthException
             shutil.copyfile(excelTemplateFilePath, excelDestPath)
         except PermissionError:
             msg= traceback.format_exc()
             traceback.print_exc(file=sys.stdout)
             logging.warning(msg)
             pass #skip this error, will be handled later
+        except InvalidFilePathLengthException:
+            logging.critical("Raised when the max file path length is exceeded")
 
         return excelDestPath
     
