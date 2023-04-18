@@ -397,8 +397,11 @@ class CSI_AUTOMATOR(QWidget):
                     logging.info("FINISHED and DONE.")
 
                 except InvalidFilePathLengthException:
-                    msg="Maximum file path length (259 characters) was exceeded. "
-                    return
+                    msg="Maximum file path length was exceeded. "
+                    traceback.print_exc(file=sys.stdout)
+
+                    self.launch_btn.setEnabled(True)
+                    logging.error(msg)
 
                 except:
                     # exc_type, exc_obj, exc_tb = sys.exc_info()

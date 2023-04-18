@@ -54,15 +54,13 @@ class TDMS_EXCEL():
             logging.warning(msg)
             pass #skip this error, will be handled later
         except InvalidFilePathLengthException:
-            logging.critical("Raised when the max file path length is exceeded")
-
+            logging.critical("The max file path length is exceeded.")
+            raise
         return excelDestPath
     
 
     
     def convert_data_to_csv(self,featureName, selectedDir,tdms_fileName, tdms_file):
-
-
 
         # 2. rename the columns of the TDMS data
         
