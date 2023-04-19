@@ -296,18 +296,23 @@ class TDMS_EXCEL():
 
 
              # erase unuseful range in excel, e.g. exclude columns "F" to "P"
+            # search fur the column names with only 1 letter
 
-            # ws.range('F:F')[1:].clear_contents()
-            ws.range('G:G')[1:].clear_contents()
-            ws.range('H:H')[1:].clear_contents()
-            ws.range('I:I')[1:].clear_contents()
-            ws.range('J:J')[1:].clear_contents()
-            ws.range('K:K')[1:].clear_contents()
-            ws.range('L:L')[1:].clear_contents()
-            ws.range('M:M')[1:].clear_contents()
-            ws.range('N:N')[1:].clear_contents()
-            ws.range('O:O')[1:].clear_contents()
-            ws.range('P:P')[1:].clear_contents()
+            discarded_columns=[]
+            shift_alphabet=3
+            
+
+            for item in newHeaderList:
+                
+                if len(item)==1: 
+                    excel_column=chr(ord(item)+shift_alphabet)
+                    discarded_columns.append(excel_column + ":"+ excel_column)
+
+            # delete the discarded columns
+
+            for item in discarded_columns:
+                ws.range(item)[1:].clear_contents()
+            
 
 
             ws.autofit(axis="columns")
