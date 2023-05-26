@@ -85,7 +85,7 @@ class CSI_AUTOMATOR(QWidget):
         self.selectedDir=None
         # self.resize(737, 596)
 
-        self.setWindowTitle("Data Automator V1.2.3")
+        self.setWindowTitle("Data Automator V1.3.1")
         self.setWindowIcon(QtGui.QIcon("icon.png"))
 
         layout = QVBoxLayout()
@@ -159,11 +159,11 @@ class CSI_AUTOMATOR(QWidget):
 
             self.workingDir=os.getcwd() + '/'
             
-            xlsxTemplateFiles = glob.glob(self.workingDir + Const.EXCEL_TEMPLATEFOLDER + r'/*.xlsx')
+            xlsxTemplateFiles = glob.glob(self.workingDir + Const.EXCEL_TEMPLATEFOLDER + r'/*.xlsm')
 
             if len(xlsxTemplateFiles)==0:
                 self.workingDir=os.getcwd() + '/dist/'
-                xlsxTemplateFiles = glob.glob(self.workingDir + Const.EXCEL_TEMPLATEFOLDER + r'/*.xlsx')
+                xlsxTemplateFiles = glob.glob(self.workingDir + Const.EXCEL_TEMPLATEFOLDER + r'/*.xlsm')
 
             self.excelTemplateFilesPath = [item.replace("/","\\") for item in xlsxTemplateFiles if not "~" in item ]
             self.excelTemplateFilesPath = [item for item in self.excelTemplateFilesPath if not "Result_Collection_Template" in item]
@@ -306,7 +306,12 @@ class CSI_AUTOMATOR(QWidget):
                     return
 
 
-                excelTemplateFilePath = [x for x in self.excelTemplateFilesPath if featureName in x]
+                excelTemplateFilePath = [x for x in self.excelTemplateFilesPath if featureName+".xlsm" == x.split("\\")[-1]]
+                
+                # for x in self.excelTemplateFilesPath:
+                #     if featureName+".xlsm" == x.split("\\")[-1]: 
+                #         excelTemplateFilePath=x
+                
                 excelTemplateFilePath=excelTemplateFilePath[0]
 
 
@@ -319,7 +324,7 @@ class CSI_AUTOMATOR(QWidget):
                 
                     # delete the Result_Collection file (if it exists)
                     try:
-                        resFiles = glob.glob(self.selectedDir + r'/Result_Collection' + mst_name + r'.xlsx')
+                        resFiles = glob.glob(self.selectedDir + r'/Result_Collection' + mst_name + r'.xlsm')
                         if not len(resFiles)==0: os.remove((resFiles[0]).replace("/","\\"))
                     except OSError:
                         logging.warning("delete went bad on the Result_Collection file")
@@ -352,7 +357,7 @@ class CSI_AUTOMATOR(QWidget):
                             logging.info(" CSV File created in " + str(round(time.time()-startTimeLoadFile,1)) + "s : " + tdmsFileName.split(".tdms")[0] + "--" + featureName + ".txt ")
                             QtWidgets.QApplication.processEvents()
 
-                            excelDestPath=self.selectedDir + "/"+ featureName +  "--" + tdmsFileName.split(".tdms")[0]  + ".xlsx"
+                            excelDestPath=self.selectedDir + "/"+ featureName +  "--" + tdmsFileName.split(".tdms")[0]  + ".xlsm"
                             
                             
                             exceldataDestPath=self.tdms_excel.copy_template_excel_file(excelDestPath, excelTemplateFilePath.replace("/","\\"))
