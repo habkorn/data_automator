@@ -323,7 +323,13 @@ class TDMS_EXCEL():
             num_col = 54
             num_row = ws.range('BB2').end('down').row
             self.resultLabels=ws.range('BB:BB')[1:].value
-            # collect data
+
+            
+
+            vb_macro = wb.macro("calc100msAvgMAX")
+            vb_macro()
+            
+            # collect result data
 
             custom_content_list=[item for item in tdms_file.properties.keys()]
 
