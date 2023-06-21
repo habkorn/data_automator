@@ -79,7 +79,7 @@ class CSI_AUTOMATOR(QWidget):
         self.selectedDir=None
         # self.resize(737, 596)
 
-        self.setWindowTitle("Data Automator V1.0.5")
+        self.setWindowTitle("Data Automator V1.0.6")
         self.setWindowIcon(QtGui.QIcon("icon.png"))
 
         layout = QVBoxLayout()
@@ -294,6 +294,9 @@ class CSI_AUTOMATOR(QWidget):
                     if not len(resFiles)==0: os.remove((resFiles[0]).replace("/","\\"))
                 except OSError:
                     logging.warning("delete went bad on the Result_Collection file")
+                    msg= traceback.format_exc()
+                    traceback.print_exc(file=sys.stdout)
+                    logging.error(msg)
                     
                         
                 # 1. convert_data_to_csv
