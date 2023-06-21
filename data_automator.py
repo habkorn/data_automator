@@ -352,7 +352,7 @@ class CSI_AUTOMATOR(QWidget):
                 
                 excelresultDestPath=self.tdms_excel.copy_template_excel_file(excelDestPath,(self.workingDir + Const.EXCEL_TEMPLATEFOLDER + r'/Result_Collection_Template.xlsx').replace("/","\\"))
                 
-                logging.info("Result Generation.. File: " + excelresultDestPath)       
+                logging.info("Result Generation started. File: " + excelresultDestPath)       
                 self.tdms_excel.write_result_to_excel_template(excelresultDestPath)
                 # logging.info("Starting Excel Macro Template execution. Please wait, this could take some time..")
                 # self.tdms_excel.run_excel_macro(self.selectedDir)
