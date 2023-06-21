@@ -3,8 +3,9 @@ import logging
 import numpy as np
 import pandas as pd
 import shutil
-
+import csv
 from Util import Const
+from Util import Functions as fnc
 from Util import InvalidFilePathLengthException
 
 import subprocess
@@ -24,27 +25,32 @@ class TDMS_EXCEL():
         self.title=Const.OPTIONS[0]
         self.df_load=None
 
-
-
         self.colNames=[]
+        self.tdmsChannelProperties={}
+
         self.tdmsProperties={}
 
 
         logging.info('TDMS to Excel data procedure selected')
 
 
-    def convert_to_csv(self,featureName, selectedDir,tdms_fileName, tdms_file,excelTemplateFilePath):
-
+    def copy_template_excel_file(self,selectedDir,tdms_fileName,featureName,excelTemplateFilePath):
         # # 1. copy the template excel file into the dirctory with the tdms files
 
         excelDestPath=selectedDir + "/"+ tdms_fileName.split(".tdms")[0] + "--" + featureName + ".xlsx"
         excelDestPath.replace("/","\\")
 
         if len(excelDestPath)>Const.MAX_PATHLENGTH_DOS: raise InvalidFilePathLengthException
-        
-
 
         shutil.copyfile(excelTemplateFilePath, excelDestPath)
+
+        return excelDestPath
+    
+
+    
+    def convert_data_to_csv(self,featureName, selectedDir,tdms_fileName, tdms_file):
+
+
 
         # 2. rename the columns of the TDMS data
         
@@ -54,20 +60,78 @@ class TDMS_EXCEL():
         for group in tdms_file.groups():
             for channel in group.channels():
                 self.colNames.append(group.name + Const.TDMS_LIST_SEP  + channel.name)
-                self.tdmsProperties.update({group.name + Const.TDMS_LIST_SEP  + channel.name:channel.properties})
+                self.tdmsChannelProperties.update({group.name + Const.TDMS_LIST_SEP  + channel.name:channel.properties})
 
         self.df_load.columns=self.colNames
 
         # self.df_load= self.df_load.astype("float64") 
 
+
         
         # 3. create the csv file
 
-        self.df_load.to_csv(selectedDir + "/"+ tdms_fileName.split(".tdms")[0] + "--" + featureName +".txt", index=False, na_rep='')
+        csvFilepath=selectedDir + "/"+ tdms_fileName.split(".tdms")[0] + "--" + featureName +".txt"
+        self.df_load.to_csv(csvFilepath, index=False, na_rep='')
 
         self.df_load=None
         self.colNames=[]
-        self.tdmsProperties={}
+        self.tdmsChannelProperties={}
+
+        return csvFilepath
+
+
+    def open_csv_file(self,csv_file_path):
+        """
+        Open and read data from a csv file without headers (skipping the first row)
+        :param csv_file_path: path of the csv file to process
+        :return: a list with the csv content
+        """
+        with open(csv_file_path, 'r', encoding='utf-8') as csv_file:
+            reader = csv.reader(csv_file)
+
+            # Skip header row
+            # next(reader)
+
+            # Add csv content to a list
+            data = list()
+            for row in reader:
+                data.append(row)
+
+            return data
+        
+
+    def write_list_to_excel(self, template_file, data_to_insert):
+        """
+        Inserting data to an existing Excel data table
+        :param template_file: path of the Excel template file
+        :param data_to_insert: data to insert (list)
+        :return: None
+        """
+
+        
+        # Start Visible Excel
+        xl_app = xw.App(visible=False, add_book=False)
+
+        # Open template file
+        wb = xl_app.books.open(template_file)
+
+        # Assign the sheet holding the template table to a variable
+        ws = wb.sheets('Source')
+
+        # First cell of the template (blank) table
+        row = 1
+        column = 1
+
+        # Insert data
+        ws.range((row, column)).value = data_to_insert
+
+        # Save and Close the Excel template file
+        wb.save()
+        wb.close()
+
+        # Close Excel
+        xl_app.quit()
+
 
 
     def run_excel_macro(self, selectedDir):
@@ -99,5 +163,5 @@ class TDMS_EXCEL():
         wb.close()
         
         # 3.  delete the excel macro file
-        os.remove(excelDestPath)
+        # os.remove(excelDestPath)
         

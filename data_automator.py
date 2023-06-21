@@ -1,4 +1,4 @@
-import sys
+import sys, traceback
 import os
 import types
 
@@ -205,6 +205,8 @@ class CSI_AUTOMATOR(QWidget):
             # search for all TDMS files within selected directory
             tdmsFiles = glob.glob(self.selectedDir + r'/*.tdms')
      
+            # get the mst name from the first file
+            mst_name="MST" + (tdmsFiles[0].split("MST")[1]).split("_")[0]
 
             logging.info("TDMS found:")
             for tdmsFile in tdmsFiles:
@@ -239,29 +241,66 @@ class CSI_AUTOMATOR(QWidget):
             # if all conditions are met: do the process
             
              
-            try:
+            try:  
 
-                # 1. convert_to_csv
-                for tdmsFile in tdmsFiles: 
+                # 0. write tdms properties to a text file
+                num=0
+                tdmspropertiesFilepath=self.selectedDir + "/" + Const.EXCEL_CSV_PROPERTIES_FILENAME +  mst_name + "--" + featureSelected + ".dat"
+                # delete the excel properties file (if it exists)
+                try:
+                    os.remove(tdmspropertiesFilepath)
+                except OSError:
+                    pass
+                
+                
+                with open(tdmspropertiesFilepath, 'a') as prop_file:
+                    
+                    # 1. convert_data_to_csv
+                    for tdmsFile in tdmsFiles: 
 
-                    startTimeLoadFile = time.time()
-                    logging.info("Processing started, please wait...")
+                        startTimeLoadFile = time.time()
+                        logging.info("Processing started, please wait...")
 
-                    with TdmsFile.read(tdmsFile, memmap_dir=os.getcwd()) as tdms_file:
-                        endTimeLoadTime = time.time()
+                        with TdmsFile.read(tdmsFile, memmap_dir=os.getcwd()) as tdms_file:
+                            endTimeLoadTime = time.time()
+                                
+                            tdmsFileName=tdmsFile.rsplit('\\')[-1]
+                            csvFilepath=self.tdms_excel.convert_data_to_csv(featureSelected,self.selectedDir,tdmsFileName, tdms_file)
+
+                            logging.info("CSV File created in "+str(round(time.time()-startTimeLoadFile,1)) +"s : " + tdmsFileName.split(".tdms")[0] + "--" + featureSelected + ".txt ")
+            
+                            excelDestPath=self.tdms_excel.copy_template_excel_file(self.selectedDir,tdmsFileName,featureSelected,excelTemplateFilePath)
                             
-                        tdmsFileName=tdmsFile.rsplit('\\')[-1]
-                        self.tdms_excel.convert_to_csv(featureSelected,self.selectedDir,tdmsFileName, tdms_file, excelTemplateFilePath)
+                            # Process events between short sleep periods
+                            QtWidgets.QApplication.processEvents()
+                            # time.sleep(0.1)
+                            logging.info("Create Excel file...")
+                            QtWidgets.QApplication.processEvents()
+                            data_from_csv = self.tdms_excel.open_csv_file(csvFilepath)
+                            self.tdms_excel.write_list_to_excel(excelDestPath, data_from_csv)
+                            logging.info("...done.")
 
-                        logging.info("CSV File created in "+str(round(time.time()-startTimeLoadFile,1)) +"s : " + tdmsFileName.split(".tdms")[0] + "--" + featureSelected + ".txt ")
-        
-                        # Process events between short sleep periods
-                        QtWidgets.QApplication.processEvents()
-                        # time.sleep(0.1)
-                # 2. run the excel macro
 
-                logging.info("Starting Excel Macro Template execution. Please wait, this could take some time..")
-                self.tdms_excel.run_excel_macro(self.selectedDir)
+                            
+                            # if num==0:
+                            #     for prop in tdms_file.properties.keys():
+                            #         prop_file.write(prop +",")
+
+                            #     prop_file.write("\n")
+                            
+                            # num=num+1        
+                            # for prop in tdms_file.properties.keys():
+                            #     prop_file.write(tdms_file.properties[prop] +",")
+                                    
+                            # prop_file.write("\n")
+                    
+                            
+
+                    
+                    # 2. run the excel macro
+
+                # logging.info("Starting Excel Macro Template execution. Please wait, this could take some time..")
+                # self.tdms_excel.run_excel_macro(self.selectedDir)
                 
 
                 logging.info("FINISHED and DONE.")
@@ -271,10 +310,16 @@ class CSI_AUTOMATOR(QWidget):
                 return
 
             except:
-                exc_type, exc_obj, exc_tb = sys.exc_info()
-                fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                print(exc_type, fname, exc_tb.tb_lineno)
-                logging.error(str(exc_type) + ", File: " + str(fname) + ", Line: " + str(exc_tb.tb_lineno))
+                # exc_type, exc_obj, exc_tb = sys.exc_info()
+                # fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                # print(exc_type, fname, exc_tb.tb_lineno)
+                # logging.error(str(exc_type) + ", File: " + str(fname) + ", Line: " + str(exc_tb.tb_lineno))
+                msg= traceback.format_exc()
+                traceback.print_exc(file=sys.stdout)
+
+               
+                logging.error(msg)
+
                 return    
 
         else: self.selectedDir=None
