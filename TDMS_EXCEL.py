@@ -127,24 +127,24 @@ class TDMS_EXCEL():
             wb = xl_app.books.open(excelresultDestPath)
 
             # Assign the sheet holding the template table to a variable
-            ws = wb.sheets('Result')
+            ws_res = wb.sheets('Result')
 
             row = self.startRowInResultsFile
             column = self.startColumnInResultsFile
             # 1. Insert data to the Result Worksheet
             
-            ws.range((row, column-1)).value="Link"
+            ws_res.range((row, column-1)).value="Link"
 
             for item in self.resultDict.keys():
 
                 for iitem in self.resultDict[item].keys():
                     # write the label
-                    if row==self.startRowInResultsFile:ws.range((row, column)).value = iitem
+                    if row==self.startRowInResultsFile:ws_res.range((row, column)).value = iitem
                     # write the value
-                    ws.range((row+1, column)).value = self.resultDict[item][iitem]
+                    ws_res.range((row+1, column)).value = self.resultDict[item][iitem]
 
    
-                    if row==self.startRowInResultsFile+1: ws.autofit(axis="columns")
+                    if row==self.startRowInResultsFile+1: ws_res.autofit(axis="columns")
 
                     # ws.range((row, column+1)).api.WrapText = True
                     # ws.range((row-1, column+1)).api.WrapText = True
@@ -154,20 +154,55 @@ class TDMS_EXCEL():
 
                 column = self.startColumnInResultsFile
                 
-                ws.range((row+1, column-1)).add_hyperlink(item)  
-                ws.range((row+1, column-1)).api.WrapText = True  
-                ws.range((row+1, column-1)).column_width = 26
-                ws.range((row+1, column-1)).row_height = 21
+                try:
+                    ws_res.range((row+1, column-1)).add_hyperlink(item)  
 
+                except:
+                    ws_res.range((row+1, column-1)).value=str(item)
+                    pass 
+
+                ws_res.range((row+1, column-1)).api.WrapText = True  
+                ws_res.range((row+1, column-1)).column_width = 26
+                ws_res.range((row+1, column-1)).row_height = 21
 
                 row=row+1
                 
 
+            # 2. transpose the data onto a seperate  worksheet
 
-            # ws.range("A:A").column_width = 26
+            # collect data
+            content_list = ws_res.range((1,1),(100,200)).value
+
+            ws_res_t = wb.sheets('Result_transponiert')
+            ws_res_t.range('A1').options(transpose=True).value=content_list
+
+
+
+            for num_col in range(0, len(self.resultDict.keys())):
+                try:
+                    val=ws_res_t.range((1, num_col+4)).value
+                    ws_res_t.range((1, num_col+4)).add_hyperlink(val)  
+
+                except:
+                    # do nothing
+                    pass     
+
+            
+            ws_res_t.autofit(axis="rows")
+            ws_res_t.autofit(axis="columns")
+            ws_res_t.range("A:B").column_width = 5
+            ws_res_t.range("C:C").column_width = 45
+            ws_res_t.range("D:CZ").column_width = 16
+            ws_res.range((1,3),(2,200)).api.WrapText = True  
+            # for r,c in zip(range(3, 6),range(3, 6)):
+            #     wb.sheets('Result_transponiert').range((r,c)).options(transpose=True).value = wb.sheets('Result_transponiert').range((r,c)).value
+
+            # ws_t.range("A:DA").column_width = 52
 
             # ws.autofit(axis="rows")
-            
+
+            # sht.range('A1').options(transpose=True).value = [1,2,3,4]
+            # Result_transponiert
            
 
             # Save and Close the Excel template file
@@ -209,11 +244,11 @@ class TDMS_EXCEL():
             ws = wb.sheets('Source')
             row = 1
             column = 1
-            # 1. Insert data to the Source Worksheet
+            # 1. Insert ALL data to the Source Worksheet
             ws.range((row, column)).value = data_to_insert
             ws.autofit(axis="columns")
 
-            # 2. do the same for the secified worksheet
+            # 2. do the same for the secified worksheet, except only the colums with useful data
             ws = wb.sheets(featureName)
             row = 1
             column = 1
@@ -227,6 +262,22 @@ class TDMS_EXCEL():
             data_to_insert[0]=newHeaderList
     
             ws.range((row, column)).value = data_to_insert
+
+             # erase unuseful range in excel, e.g. exclude columns "F" to "P"
+
+            # ws.range('F:F')[1:].clear_contents()
+            ws.range('G:G')[1:].clear_contents()
+            ws.range('H:H')[1:].clear_contents()
+            ws.range('I:I')[1:].clear_contents()
+            ws.range('J:J')[1:].clear_contents()
+            ws.range('K:K')[1:].clear_contents()
+            ws.range('L:L')[1:].clear_contents()
+            ws.range('M:M')[1:].clear_contents()
+            ws.range('N:N')[1:].clear_contents()
+            ws.range('O:O')[1:].clear_contents()
+            ws.range('P:P')[1:].clear_contents()
+
+
             ws.autofit(axis="columns")
 
             # 3. collect the result data to be used later
@@ -253,7 +304,7 @@ class TDMS_EXCEL():
       
             resultDict={}
 
-            for num in range(0,len(result_list)-1):
+            for num in range(0,len(result_list)):
                 resultDict.update({content_list[num]:result_list[num]})
             
 

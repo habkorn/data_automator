@@ -80,7 +80,7 @@ class CSI_AUTOMATOR(QWidget):
         self.selectedDir=None
         # self.resize(737, 596)
 
-        self.setWindowTitle("Data Automator V1.0.6")
+        self.setWindowTitle("Data Automator V1.1.1")
         self.setWindowIcon(QtGui.QIcon("icon.png"))
 
         layout = QVBoxLayout()
@@ -322,7 +322,7 @@ class CSI_AUTOMATOR(QWidget):
                         tdmsFileName=tdmsFile.rsplit('\\')[-1]
                         csvFilepath=self.tdms_excel.convert_data_to_csv(featureName,self.selectedDir,tdmsFileName, tdms_file)
 
-                        logging.info(str(num)+ "/" + str(len(tdmsFiles))+ ":  CSV File created in "+str(round(time.time()-startTimeLoadFile,1)) +"s : " + tdmsFileName.split(".tdms")[0] + "--" + featureName + ".txt ")
+                        logging.info(" CSV File created in "+str(round(time.time()-startTimeLoadFile,1)) +"s : " + tdmsFileName.split(".tdms")[0] + "--" + featureName + ".txt ")
                         QtWidgets.QApplication.processEvents()
 
                         excelDestPath=self.selectedDir + "/"+ featureName +  "--" + tdmsFileName.split(".tdms")[0]  + ".xlsx"
@@ -332,7 +332,7 @@ class CSI_AUTOMATOR(QWidget):
                         # Process events between short sleep periods
                         QtWidgets.QApplication.processEvents()
                         # time.sleep(0.1)
-                        logging.info("Create Excel file...")
+                        logging.info(str(num)+ "/" + str(len(tdmsFiles))+ ": Create Excel file...")
                         
                         data_from_csv = self.tdms_excel.get_csv_data(csvFilepath)
 
