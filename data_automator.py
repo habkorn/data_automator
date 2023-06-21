@@ -5,7 +5,7 @@ import subprocess
 
 from TDMS_EXCEL import TDMS_EXCEL
 
-from PyQt5.QtWidgets import QApplication, QWidget, QComboBox, QPushButton, QFileDialog, QVBoxLayout,QHBoxLayout, QLabel,QGridLayout,QRadioButton,QSpacerItem, QSizePolicy
+from PyQt5.QtWidgets import QApplication, QWidget, QComboBox,QListWidget, QListWidgetItem,QPushButton, QFileDialog, QVBoxLayout,QHBoxLayout, QLabel,QGridLayout,QSpacerItem, QSizePolicy
 from PyQt5 import QtCore, QtGui, QtWidgets
 from nptdms import TdmsFile
 import glob
@@ -52,14 +52,19 @@ class CSI_AUTOMATOR(QWidget):
         self.jsonDict={}
 
         self.excelTemplateFilesPath=None
-        self.radioButtons=[]
+
         self.optionsLayout = QHBoxLayout()
+
+        self.template_list_widget = QListWidget(self)
 
         self.window_width, self.window_height = 1000, 200
         self.setMinimumSize(self.window_width, self.window_height)
 
-        self.label2=QLabel("Found Templates:")
-        self.label2.setFont(smallFont)
+        self.foundTemplatesLabel=QLabel("Found Templates:")
+        self.foundTemplatesLabel.setFont(smallFont)
+
+
+         
 
         self.logTextBox = QTextEditLogger(self)
         # You can format what is printed to text box
@@ -83,7 +88,7 @@ class CSI_AUTOMATOR(QWidget):
         self.selectedDir=None
         # self.resize(737, 596)
 
-        self.setWindowTitle("Data Automator V1.3.3")
+        self.setWindowTitle("Data Automator V1.4.0")
         self.setWindowIcon(QtGui.QIcon("icon.png"))
 
         layout = QVBoxLayout()
@@ -116,16 +121,26 @@ class CSI_AUTOMATOR(QWidget):
         self.launch_btn.setEnabled(False)
         
         
+        # getting item changed signal
+
+        self.template_list_widget.itemPressed.connect(self.template_itemPressed)
 
 
-        layout.addWidget(self.label2)
+        layout.addWidget(self.foundTemplatesLabel)
 
 
         layout.addLayout(self.optionsLayout)
 
+        self.optionsLayout.addWidget(self.template_list_widget,1)
+
+        # self.optionsLayout.addStretch(1)
+        
+
+        self.optionsLayout.addWidget(self.logTextBox.widget,5)
+
         layout.addWidget(self.launch_btn)
 
-        layout.addWidget(self.logTextBox.widget)
+        self.launch_btn.setSizePolicy(QSizePolicy.Preferred,QSizePolicy.Preferred)
 
         logging.info('Start of program')
         # logging.info('something to remember')
@@ -138,14 +153,10 @@ class CSI_AUTOMATOR(QWidget):
     #     self.logTextBox.widget.setPlainText(text)
 
 
+    def template_itemPressed(self):
+        list=self.sender()
+        self.launch_btn.setEnabled(True)
 
-
-    def radioClicked(self):
-        radioButton = self.sender()
-        if radioButton.isChecked():
-            self.launch_btn.setEnabled(True)
-            print("feature is %s" % (radioButton.feature))
-        
 
     def selectionchange(self,i):
 
@@ -156,6 +167,8 @@ class CSI_AUTOMATOR(QWidget):
             # self.optionsLayout.addItem(hSpacer)
 
             self.workingDir=os.getcwd() + '/'
+
+            
             
             xlsxTemplateFiles = glob.glob(self.workingDir + Const.EXCEL_TEMPLATEFOLDER + r'/*.xlsm')
 
@@ -166,24 +179,23 @@ class CSI_AUTOMATOR(QWidget):
             self.excelTemplateFilesPath = [item.replace("/","\\") for item in xlsxTemplateFiles if not "~" in item ]
             self.excelTemplateFilesPath = [item for item in self.excelTemplateFilesPath if not "Result_Collection_Template" in item]
 
-            self.label2.setText("Found Templates (" + str(len (self.excelTemplateFilesPath)) + ")")
+            self.foundTemplatesLabel.setText("Found Templates (" + str(len (self.excelTemplateFilesPath)) + ")")
             
             for file in self.excelTemplateFilesPath:
                 featureName=file.rsplit('\\')[-1].split(".")[0]
-                radiobutton = QRadioButton(featureName)
-                # radiobutton.setChecked(True)
-                radiobutton.feature = featureName
-                self.radioButtons.append(radiobutton)
-                radiobutton.toggled.connect(self.radioClicked)
-                self.optionsLayout.addWidget(radiobutton)
+
+
+                self.template_list_widget.addItem(QListWidgetItem(featureName))
+                # if self.template_list_widget.count()>0:
+                #     self.template_list_widget.setCurrentRow(0)
 
         else: 
             print("else")
-            for i in reversed(range(self.optionsLayout.count())): 
-                self.optionsLayout.itemAt(i).widget().setParent(None)
-                self.radioButtons=[]
 
-            self.label2.setText("Found Templates (0)")
+            self.template_list_widget.clear()
+            self.launch_btn.setEnabled(False)
+
+            self.foundTemplatesLabel.setText("Found Templates (0)")
 
 
     def launchButton(self):
@@ -293,11 +305,10 @@ class CSI_AUTOMATOR(QWidget):
                 
                 logging.info(str(len(self.excelTemplateFilesPath)+1) + " EXCEL Templates File(s) found.")   
                 
-                featureName=""
-                for rb in self.radioButtons:
-                    if rb.isChecked(): 
-                        featureName=rb.feature
-                        logging.info("Template for " + str(rb.feature) + " will be processed.")
+                featureName=self.template_list_widget.currentItem().text()
+
+                logging.info("Template for " + str(featureName) + " will be processed.")
+
 
                 if featureName=="": 
                     logging.warning("No Template was selected. Please select one.")
@@ -372,7 +383,7 @@ class CSI_AUTOMATOR(QWidget):
                             # delete the csv file (if it exists)
                             os.remove(csvFilepath)
 
-                            result_dict=self.tdms_excel.write_data_to_excel_template(exceldataDestPath, data_from_csv,featureName,tdms_file)
+                            result_dict=self.tdms_excel.write_data_to_excel_template_start_macro(exceldataDestPath, data_from_csv,featureName,tdms_file)
 
                             logging.info("...done in "+ str(round(time.time()-startTimeLoadFile,1)) +"s : Filename: " + exceldataDestPath)
 
