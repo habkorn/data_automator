@@ -3,8 +3,6 @@ import os
 import types
 import subprocess
 
-
-
 from TDMS_EXCEL import TDMS_EXCEL
 
 from PyQt5.QtWidgets import QApplication, QWidget, QComboBox, QPushButton, QFileDialog, QVBoxLayout,QHBoxLayout, QLabel,QGridLayout,QRadioButton,QSpacerItem, QSizePolicy
@@ -85,7 +83,7 @@ class CSI_AUTOMATOR(QWidget):
         self.selectedDir=None
         # self.resize(737, 596)
 
-        self.setWindowTitle("Data Automator V1.3.2")
+        self.setWindowTitle("Data Automator V1.3.3")
         self.setWindowIcon(QtGui.QIcon("icon.png"))
 
         layout = QVBoxLayout()

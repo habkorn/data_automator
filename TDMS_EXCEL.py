@@ -324,10 +324,10 @@ class TDMS_EXCEL():
             num_row = ws.range('BB2').end('down').row
             self.resultLabels=ws.range('BB:BB')[1:].value
 
-            
-
             vb_macro = wb.macro("calc100msAvgMAX")
-            vb_macro()
+            
+            if vb_macro()==False: logging.error("The TDMS File "+ (template_file.split("/")[-1]).replace(".xlsm","")+".tdms" +" is corrupted in some way. Please check the data carefully.")
+
             
             # collect result data
 
