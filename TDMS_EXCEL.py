@@ -121,10 +121,13 @@ class TDMS_EXCEL():
             # Assign the sheet holding the template table to a variable
             ws = wb.sheets('Result')
             row = 5
-            column = 5
+            column = 3
             # 1. Insert data to the Result Worksheet
             
             ws.range((row, column)).options(transpose=True).value = self.resultDict["content_list"]
+
+            ws.range((row, column)).value="Link"
+            ws.range((row-1, column)).value="Title"
 
             self.resultDict.pop("content_list")
 
@@ -132,13 +135,23 @@ class TDMS_EXCEL():
 
             num=1
             for item in self.resultDict.keys():
+                
                 ws.range((row, column+num)).options(transpose=True).value = self.resultDict[item]
-
+                # create a hyperlink
+                name=ws.range((row, column+num)).value
+                testName=ws.range((row+2, column+num)).value
+                ws.range((row-1, column+num)).value=str(name)
+                ws.range((row, column+num)).add_hyperlink(excelresultDestPath.rsplit("/",1)[0]+"/"+str(testName)+"--"+str(name)+".xlsx") 
+                ws.range((row, column+num)).api.WrapText = True
+                ws.range((row, column+num)).column_width = 40
+                ws.range((row, column+num)).row_height = 40
+                
                 num=num+1
 
 
 
             ws.autofit(axis="columns")
+           
 
             # Save and Close the Excel template file
             wb.save()
@@ -148,9 +161,10 @@ class TDMS_EXCEL():
             # Close Excel
             xl_app.quit()
         except:
+            logging.warning("Access to Excel went bad: check if excel instance is in zombie state.")
             xl_app.quit()
 
-            
+
 
     def write_data_to_excel_template(self, template_file, data_to_insert, featureName,tdms_file):
         """
@@ -211,6 +225,7 @@ class TDMS_EXCEL():
             for item in custom_content_list:
                 prop_list.append(tdms_file.properties[item])
 
+            
             result_list=prop_list+ [featureName] + result_list
       
             
@@ -230,39 +245,10 @@ class TDMS_EXCEL():
 
         except: # close the started excel to not pose a problem later on
             # Close Excel
+            logging.warning("Access to Excel went bad: check if excel instance is in zombie state.")
             xl_app.quit()
 
 
 
 
-    def run_excel_macro(self, selectedDir):
-       
-        excelSrcPath=(os.getcwd() + "/" + Const.EXCEL_TEMPLATEFOLDER + "/CSV_Automator.xlsm").replace("/","\\")
-        excelDestPath=(selectedDir + "/" + Const.EXCEL_CSV_AUTOMATOR_FILENAME).replace("/","\\")
-
-
-       # 0. delete the result excel file (if it exists)
-
-        try:
-            os.remove((selectedDir  + "/" + Const.EXCEL_RESULT_FILENAME).replace("/","\\"))
-        except OSError:
-            pass
-
-       
-       # 1. copy the excel macro automator file to the data directory
-        if len(excelDestPath)>Const.MAX_PATHLENGTH_DOS: raise InvalidFilePathLengthException
-        
-        shutil.copyfile(excelSrcPath, excelDestPath)
-        
-        # 2.  run the excel macro
-
-        logging.info("Run the excel macro to fill the templates with data..")
-        wb=xw.Book(excelDestPath)
-        macro=wb.macro("run_csv_to_excel")
-        macro()
-        
-        wb.close()
-        
-        # 3.  delete the excel macro file
-        # os.remove(excelDestPath)
-        
+    
