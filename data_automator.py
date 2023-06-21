@@ -81,14 +81,11 @@ class CSI_AUTOMATOR(QWidget):
         # timer = QtCore.QTimer(self)
         # timer.timeout.connect(self.doTimer)
         # timer.start(1000)
-        
-        
-
-
+ 
         self.selectedDir=None
         # self.resize(737, 596)
 
-        self.setWindowTitle("Data Automator V1.2.2")
+        self.setWindowTitle("Data Automator V1.2.3")
         self.setWindowIcon(QtGui.QIcon("icon.png"))
 
         layout = QVBoxLayout()
