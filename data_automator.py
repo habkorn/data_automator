@@ -19,7 +19,7 @@ from PyQt5.QtGui import *
 import logging
 import time, json
 from Util import Const,InvalidFilePathLengthException, ProxyModel
-from pathlib import Path
+import os.path
 
 
 
@@ -195,9 +195,8 @@ class CSI_AUTOMATOR(QWidget):
         # dialog.setOption(QFileDialog.ShowDirsOnly, False)
 
         settings_file_path=os.getcwd() + "/settings.json".replace("/","\\")
-        settings_path = Path(settings_file_path)
-
-        if not settings_path.is_file():
+        
+        if not os.path.isfile(os.getcwd() + "/settings.json".replace("/","\\")):
             settings_file = open(os.getcwd() + "/settings.json".replace("/","\\"), "w")
             self.jsonDict={"lastDir": os.getcwd()}
             json.dump(self.jsonDict, settings_file, indent = 6)
@@ -298,7 +297,9 @@ class CSI_AUTOMATOR(QWidget):
                     
                         
                 # 1. convert_data_to_csv
+                num=1
                 for tdmsFile in tdmsFiles: 
+
 
                     startTimeLoadFile = time.time()
                     logging.info("Processing started, please wait...")
@@ -309,8 +310,9 @@ class CSI_AUTOMATOR(QWidget):
                         tdmsFileName=tdmsFile.rsplit('\\')[-1]
                         csvFilepath=self.tdms_excel.convert_data_to_csv(featureName,self.selectedDir,tdmsFileName, tdms_file)
 
-                        logging.info("CSV File created in "+str(round(time.time()-startTimeLoadFile,1)) +"s : " + tdmsFileName.split(".tdms")[0] + "--" + featureName + ".txt ")
-        
+                        logging.info(str(num)+ "/" + str(len(tdmsFiles))+ ":  CSV File created in "+str(round(time.time()-startTimeLoadFile,1)) +"s : " + tdmsFileName.split(".tdms")[0] + "--" + featureName + ".txt ")
+                        QtWidgets.QApplication.processEvents()
+
                         excelDestPath=self.selectedDir + "/"+ featureName +  "--" + tdmsFileName.split(".tdms")[0]  + ".xlsx"
                         
                         exceldataDestPath=self.tdms_excel.copy_template_excel_file(excelDestPath, excelTemplateFilePath)
@@ -319,7 +321,7 @@ class CSI_AUTOMATOR(QWidget):
                         QtWidgets.QApplication.processEvents()
                         # time.sleep(0.1)
                         logging.info("Create Excel file...")
-                        QtWidgets.QApplication.processEvents()
+                        
                         data_from_csv = self.tdms_excel.get_csv_data(csvFilepath)
 
                         # delete the csv file (if it exists)
