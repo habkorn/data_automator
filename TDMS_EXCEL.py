@@ -193,7 +193,14 @@ class TDMS_EXCEL():
             ws_res_t.range("A:B").column_width = 5
             ws_res_t.range("C:C").column_width = 45
             ws_res_t.range("D:CZ").column_width = 16
-            ws_res.range((1,3),(2,200)).api.WrapText = True  
+            ws_res.range('D2').WrapText = True  
+
+            
+            wraptext_t = wb.macro('wraptext_t')
+            wraptext_t()
+           
+            # ws_res.range((1,3),(2,200)).WrapText = True  
+            
             # for r,c in zip(range(3, 6),range(3, 6)):
             #     wb.sheets('Result_transponiert').range((r,c)).options(transpose=True).value = wb.sheets('Result_transponiert').range((r,c)).value
 

@@ -54,7 +54,7 @@ class Const():
 
     EXCEL_TEMPLATEFOLDER="TDMS_CSI_ExcelTemplates"
 
-
+    EXCEL_RESULT_FILENAME="Result_Collection_Template.xlsm"
 
 
 class Functions:
