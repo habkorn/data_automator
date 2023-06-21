@@ -1,0 +1,16 @@
+links
+
+tdms Files DV3 Funktionsprüfung
+
+
+[10:23] Christoph Pucher
+
+Drehzahlmessung Pfad : F:\ENTWICKLUNG\SSC019 CSI 3 Modul\04 Erprobungen\02 Interne Prüfberichte\MST2023022200_SSC019 Lebensdauer DV3 CSI3 Modul_PAR\Ergebnisse\Drehzahlmessung
+
+[10:24] Christoph Pucher
+
+Template Pfad: F:\ENTWICKLUNG\Software\data_automator\dist\TDMS_CSI_ExcelTemplates\12V F2-F3_PUC.xlsm
+
+[10:24] Christoph Pucher
+
+Datenpfad: F:\ENTWICKLUNG\SSC019 CSI 3 Modul\04 Erprobungen\02 Interne Prüfberichte\MST2023022200_SSC019 Lebensdauer DV3 CSI3 Modul_PAR\Ergebnisse\F2-F3

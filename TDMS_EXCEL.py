@@ -249,7 +249,7 @@ class TDMS_EXCEL():
                     row += Const.EXCEL_MAX_CHUNK_SIZE
 
 
-    def write_data_to_excel_template(self, template_file, data_to_insert, featureName,tdms_file):
+    def write_data_to_excel_template_start_macro(self, template_file, data_to_insert, featureName,tdms_file):
         """
         Inserting data to an existing Excel data table
         :param template_file: path of the Excel template file
@@ -275,18 +275,38 @@ class TDMS_EXCEL():
 
             ws.autofit(axis="columns")
 
-            # 2. do the same for the secified worksheet, except only the colums with useful data
+            # 2. do the same for the secified worksheet, except only the columns with useful data
             ws = wb.sheets(featureName)
             row = 1
             column = 1
             # however this time, rename the columns
             # Insert data
-            search_str=["Analog-IO --> ","TC --> "]
+            search_str=["Analog-IO --> ","TC --> "]  # default search Strings
+
             newHeaderList=[]
             for str in search_str:
                 [newHeaderList.append(item.replace(str,"")) for item in data_to_insert[0] if str in item]
-        
+
             data_to_insert[0]=newHeaderList
+            
+            if featureName=="F2-F3 RPM": 
+                
+                search_str=["Drehzahl","Strom_LD_Ebene_2"]
+                newHeaderList=[]
+                temp_data_to_insert=[]
+
+                for str in search_str:
+                    kk=0
+                    for item in data_to_insert[0]:
+                        kk=kk+1
+                        if not str in item:
+                            temp_data_to_insert.append(data_to_insert[:][kk])
+                            # del data_to_insert[:][kk]
+
+                data_to_insert[0]=newHeaderList
+
+        
+            
 
             # wb.sheets('Source').range('A1').end('down').end('right')
 
