@@ -232,9 +232,9 @@ class TDMS_EXCEL():
             # 3. collect the result data to be used later
 
             # find the numbers of columns and rows in the sheet
-            num_col = 53
-            num_row = ws.range('BA2').end('down').row
-            self.resultLabels=ws.range('BA:BA')[1:].value
+            num_col = 54
+            num_row = ws.range('BB2').end('down').row
+            self.resultLabels=ws.range('BB:BB')[1:].value
             # collect data
 
             custom_content_list=[item for item in tdms_file.properties.keys()]
