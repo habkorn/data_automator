@@ -1,5 +1,5 @@
 # class for TDMS data and Excel output
-import logging
+import logging,traceback,sys
 import numpy as np
 import pandas as pd
 import shutil
@@ -32,6 +32,10 @@ class TDMS_EXCEL():
         self.resultDict={}
 
         logging.info('TDMS to Excel data procedure selected')
+
+
+        self.startRow=5
+        self.startColumn=3
 
 
     def copy_template_excel_file(self,excelDestPath,excelTemplateFilePath):
@@ -114,43 +118,41 @@ class TDMS_EXCEL():
         # Start  Excel
         xl_app = xw.App(visible=False, add_book=False)
 
+        
         try:
             # Open template file
             wb = xl_app.books.open(excelresultDestPath)
 
             # Assign the sheet holding the template table to a variable
             ws = wb.sheets('Result')
-            row = 5
-            column = 3
+
+            row = self.startRow
+            column = self.startColumn
             # 1. Insert data to the Result Worksheet
             
-            ws.range((row, column)).options(transpose=True).value = self.resultDict["content_list"]
+            ws.range((row-1, column)).value="Link"
 
-            ws.range((row, column)).value="Link"
-            ws.range((row-1, column)).value="Title"
-
-            self.resultDict.pop("content_list")
-
-
-
-            num=1
             for item in self.resultDict.keys():
-                
-                ws.range((row, column+num)).options(transpose=True).value = self.resultDict[item]
-                # create a hyperlink
-                name=ws.range((row, column+num)).value
-                testName=ws.range((row+2, column+num)).value
-                ws.range((row-1, column+num)).value=str(name)
-                ws.range((row, column+num)).add_hyperlink(excelresultDestPath.rsplit("/",1)[0]+"/"+str(testName)+"--"+str(name)+".xlsx") 
-                ws.range((row, column+num)).api.WrapText = True
-                ws.range((row, column+num)).column_width = 40
-                ws.range((row, column+num)).row_height = 40
-                
-                num=num+1
+
+                ws.range((row-1, column+1)).add_hyperlink(item)
+
+                for iitem in self.resultDict[item].keys():
+
+                    if column==3:ws.range((row, column)).value = iitem
+
+                    ws.range((row, column+1)).value = self.resultDict[item][iitem]
+                    ws.range((row, column+1)).api.WrapText = True
+                    ws.range((row-1, column+1)).api.WrapText = True
+                    ws.range((row, column+1)).column_width = 40
+                    ws.range((row, column+1)).row_height = 40
+                    row=row+1
+
+                column=column+1
+                row = self.startRow
 
 
-
-            ws.autofit(axis="columns")
+            ws.range("C:C").column_width = 26
+            # ws.autofit(axis="columns")
            
 
             # Save and Close the Excel template file
@@ -161,8 +163,11 @@ class TDMS_EXCEL():
             # Close Excel
             xl_app.quit()
         except:
-            logging.warning("Access to Excel went bad: check if excel instance is in zombie state.")
+            msg= traceback.format_exc()
+            traceback.print_exc(file=sys.stdout)
+            logging.warning("write_result_to_excel_template: Access to Excel went bad. Check if excel instance is in zombie state (Task Manager).")
             xl_app.quit()
+            raise Exception("location: write_result_to_excel_template")
 
 
 
@@ -180,6 +185,7 @@ class TDMS_EXCEL():
 
         try:
             # Open template file
+           
             wb = xl_app.books.open(template_file)
 
             # Assign the sheet holding the template table to a variable
@@ -228,11 +234,13 @@ class TDMS_EXCEL():
             
             result_list=prop_list+ [featureName] + result_list
       
-            
-            self.resultDict.update({tdms_file.properties['name']:result_list})
+            resultDict={}
 
-            if not("content_list" in self.resultDict.keys()):
-                self.resultDict.update({"content_list":content_list})
+            for num in range(0,len(result_list)-1):
+                resultDict.update({content_list[num]:result_list[num]})
+            
+
+            self.resultDict.update({template_file:resultDict})
 
             # Save and Close the Excel template file
             wb.save()
@@ -245,8 +253,11 @@ class TDMS_EXCEL():
 
         except: # close the started excel to not pose a problem later on
             # Close Excel
-            logging.warning("Access to Excel went bad: check if excel instance is in zombie state.")
+            msg= traceback.format_exc()
+            traceback.print_exc(file=sys.stdout)
+            logging.warning("write_data_to_excel_template: Access to Excel went bad. Check if excel instance is in zombie state (Task Manager).")
             xl_app.quit()
+            raise Exception("location: write_data_to_excel_template")
 
 
 

@@ -17,9 +17,10 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 
 import logging
-import time
-from Util import Const
-from Util import InvalidFilePathLengthException
+import time, json
+from Util import Const,InvalidFilePathLengthException, ProxyModel
+from pathlib import Path
+
 
 
 # Uncomment below for terminal log messages
@@ -49,7 +50,7 @@ class CSI_AUTOMATOR(QWidget):
 
         self.tdms_excel=TDMS_EXCEL()
         self.functions = [self.procTDMSDataforCSI, self.procEmpty]
-
+        self.jsonDict={}
 
         self.excelTemplateFilesPath=None
         self.radioButtons=[]
@@ -187,11 +188,34 @@ class CSI_AUTOMATOR(QWidget):
         
     def procTDMSDataforCSI(self):
 
-        dialog = QFileDialog(self, 'Select a folder containing TDMS files', os.getcwd())
+        # dialog = QFileDialog(self, 'Select a folder containing TDMS files', os.getcwd())
 
 
-        dialog.setFileMode(QFileDialog.DirectoryOnly)
-        dialog.setOption(QFileDialog.ShowDirsOnly, False)
+        # dialog.setFileMode(QFileDialog.DirectoryOnly)
+        # dialog.setOption(QFileDialog.ShowDirsOnly, False)
+
+        settings_file_path=os.getcwd() + "/settings.json".replace("/","\\")
+        settings_path = Path(settings_file_path)
+
+        if not settings_path.is_file():
+            settings_file = open(os.getcwd() + "/settings.json".replace("/","\\"), "w")
+            self.jsonDict={"lastDir": os.getcwd()}
+            json.dump(self.jsonDict, settings_file, indent = 6)
+            settings_file.close()
+
+        settings_file = open(os.getcwd() + "/settings.json".replace("/","\\"))
+        settings_data = json.load(settings_file)
+        settings_file.close()
+
+
+        dialog = QFileDialog(self, 'Select a folder containing TDMS files', settings_data["lastDir"])
+        dialog.setFileMode(QFileDialog.Directory)
+        dialog.setOption(QFileDialog.DontUseNativeDialog, True)
+
+        proxy = ProxyModel(dialog)
+        dialog.setProxyModel(proxy)
+
+
 
         # dialog.setFileMode(QFileDialog.DirectoryOnly)
         # dialog.selectNameFilter("TDMS Files (*.tdms)")
@@ -199,6 +223,12 @@ class CSI_AUTOMATOR(QWidget):
         if dialog.exec_() == QFileDialog.Accepted:
             self.selectedDir = dialog.selectedFiles()[0]
 
+            # write the selected in a JSON file
+
+            self.jsonDict={"lastDir": self.selectedDir}
+            settings_file = open(os.getcwd() + "/settings.json".replace("/","\\"), "w")
+            json.dump(self.jsonDict, settings_file, indent = 6)
+            settings_file.close()
 
             # self.selectedDir="F:/ENTWICKLUNG/SSC019 CSI 3 Modul/04 Erprobungen/02 Interne Prüfberichte/MST2022081100_SSC018-SSC019_DV2_CSI3_KompressorModul/Ergebnisse/L1 - Lebensdauerprüfung/12V/Thomas DV2 tdms/Run1"
     
@@ -292,7 +322,8 @@ class CSI_AUTOMATOR(QWidget):
                 excelDestPath=self.selectedDir + "/"+ "Result_Collection" +  "--" + mst_name  + ".xlsx"
                 
                 excelresultDestPath=self.tdms_excel.copy_template_excel_file(excelDestPath,os.getcwd() + '/' + Const.EXCEL_TEMPLATEFOLDER + r'/Result_Collection_Template.xlsx')
-                        
+                
+                logging.info("Result Generation.. File: " + excelresultDestPath)       
                 self.tdms_excel.write_result_to_excel_template(excelresultDestPath)
                 # logging.info("Starting Excel Macro Template execution. Please wait, this could take some time..")
                 # self.tdms_excel.run_excel_macro(self.selectedDir)

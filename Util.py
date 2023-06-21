@@ -1,4 +1,5 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import QIdentityProxyModel
 from PyQt5.QtWidgets import QFileDialog, QWidget
 import sys,os
 
@@ -69,4 +70,11 @@ class InvalidFilePathLengthException(Exception):
     pass
 
 
-
+class ProxyModel(QIdentityProxyModel):
+    def flags(self, index):
+        flags = super(ProxyModel, self).flags(index)
+        if not self.sourceModel().isDir(index):
+            flags &= ~QtCore.Qt.ItemIsSelectable
+            # or disable all files
+            # flags &= ~Qt.ItemIsEnabled
+        return flags
