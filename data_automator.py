@@ -65,7 +65,13 @@ class CSI_AUTOMATOR(QWidget):
 
         self.logTextBox = QTextEditLogger(self)
         # You can format what is printed to text box
-        self.logTextBox.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+
+        self.log_formatter=logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+
+        self.logTextBox.setFormatter(self.log_formatter)
+
+        logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', filemode='a') 
+
         logging.getLogger().addHandler(self.logTextBox)
 
 
@@ -82,7 +88,7 @@ class CSI_AUTOMATOR(QWidget):
         self.selectedDir=None
         # self.resize(737, 596)
 
-        self.setWindowTitle("Data Automator V1.2.0")
+        self.setWindowTitle("Data Automator V1.2.1")
         self.setWindowIcon(QtGui.QIcon("icon.png"))
 
         layout = QVBoxLayout()
@@ -253,10 +259,15 @@ class CSI_AUTOMATOR(QWidget):
             json.dump(self.jsonDict, settings_file, indent = 6)
             settings_file.close()
 
+            fh = logging.FileHandler(filename=self.selectedDir + "/"+ "Log.txt")
+            fh.setFormatter(self.log_formatter)
+          
 
-            logging.basicConfig(filename=self.selectedDir + "/"+ "Log.txt", 
-                                format='%(asctime)s %(message)s', 
-                                filemode='a') 
+            # logging.basicConfig(filename=self.selectedDir + "/"+ "Log.txt", 
+            #                     format='%(asctime)s %(message)s', 
+            #                     filemode='a') 
+            
+            logging.getLogger().addHandler(fh)
 
             # self.selectedDir="F:/ENTWICKLUNG/SSC019 CSI 3 Modul/04 Erprobungen/02 Interne Prüfberichte/MST2022081100_SSC018-SSC019_DV2_CSI3_KompressorModul/Ergebnisse/L1 - Lebensdauerprüfung/12V/Thomas DV2 tdms/Run1"
     
