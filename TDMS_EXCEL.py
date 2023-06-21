@@ -29,20 +29,22 @@ class TDMS_EXCEL():
         self.tdmsChannelProperties={}
 
         self.tdmsProperties={}
-
+        self.resultDict={}
 
         logging.info('TDMS to Excel data procedure selected')
 
 
-    def copy_template_excel_file(self,selectedDir,tdms_fileName,featureName,excelTemplateFilePath):
-        # # 1. copy the template excel file into the dirctory with the tdms files
+    def copy_template_excel_file(self,excelDestPath,excelTemplateFilePath):
+        # # 1. copy the data template excel file into the dirctory with the tdms files
 
-        excelDestPath=selectedDir + "/"+ tdms_fileName.split(".tdms")[0] + "--" + featureName + ".xlsx"
         excelDestPath.replace("/","\\")
 
         if len(excelDestPath)>Const.MAX_PATHLENGTH_DOS: raise InvalidFilePathLengthException
 
-        shutil.copyfile(excelTemplateFilePath, excelDestPath)
+        try:
+            shutil.copyfile(excelTemplateFilePath, excelDestPath)
+        except PermissionError:
+            pass #skip this error, will be handled later
 
         return excelDestPath
     
@@ -64,6 +66,13 @@ class TDMS_EXCEL():
 
         self.df_load.columns=self.colNames
 
+        # re-index the columns necessary. "Analog-IO -->" should always be first
+        if ("TC -->" in self.df_load.columns[0]): 
+            correct_list= [item for item in self.df_load.columns if "Analog-IO -->" in item]
+            [correct_list.append(item) for item in self.df_load.columns if "TC -->" in item]
+            # Reorder dataframe columns in alphabetical order. 
+            self.df_load = self.df_load.reindex(columns=correct_list)
+
         # self.df_load= self.df_load.astype("float64") 
 
 
@@ -80,7 +89,7 @@ class TDMS_EXCEL():
         return csvFilepath
 
 
-    def open_csv_file(self,csv_file_path):
+    def get_csv_data(self,csv_file_path):
         """
         Open and read data from a csv file without headers (skipping the first row)
         :param csv_file_path: path of the csv file to process
@@ -100,37 +109,129 @@ class TDMS_EXCEL():
             return data
         
 
-    def write_list_to_excel(self, template_file, data_to_insert):
+
+    def write_result_to_excel_template(self, excelresultDestPath):     
+        # Start  Excel
+        xl_app = xw.App(visible=False, add_book=False)
+
+        try:
+            # Open template file
+            wb = xl_app.books.open(excelresultDestPath)
+
+            # Assign the sheet holding the template table to a variable
+            ws = wb.sheets('Result')
+            row = 5
+            column = 5
+            # 1. Insert data to the Result Worksheet
+            
+            ws.range((row, column)).options(transpose=True).value = self.resultDict["content_list"]
+
+            self.resultDict.pop("content_list")
+
+
+
+            num=1
+            for item in self.resultDict.keys():
+                ws.range((row, column+num)).options(transpose=True).value = self.resultDict[item]
+
+                num=num+1
+
+
+
+            ws.autofit(axis="columns")
+
+            # Save and Close the Excel template file
+            wb.save()
+            wb.close()
+
+            self.resultDict={}
+            # Close Excel
+            xl_app.quit()
+        except:
+            xl_app.quit()
+
+            
+
+    def write_data_to_excel_template(self, template_file, data_to_insert, featureName,tdms_file):
         """
         Inserting data to an existing Excel data table
         :param template_file: path of the Excel template file
         :param data_to_insert: data to insert (list)
         :return: None
         """
-
         
-        # Start Visible Excel
+            
+        # Start  Excel
         xl_app = xw.App(visible=False, add_book=False)
 
-        # Open template file
-        wb = xl_app.books.open(template_file)
+        try:
+            # Open template file
+            wb = xl_app.books.open(template_file)
 
-        # Assign the sheet holding the template table to a variable
-        ws = wb.sheets('Source')
+            # Assign the sheet holding the template table to a variable
+            ws = wb.sheets('Source')
+            row = 1
+            column = 1
+            # 1. Insert data to the Source Worksheet
+            ws.range((row, column)).value = data_to_insert
+            ws.autofit(axis="columns")
 
-        # First cell of the template (blank) table
-        row = 1
-        column = 1
+            # 2. do the same for the secified worksheet
+            ws = wb.sheets(featureName)
+            row = 1
+            column = 1
+            # however this time, rename the columns
+            # Insert data
+            search_str=["Analog-IO --> ","TC --> "]
+            newHeaderList=[]
+            for str in search_str:
+                [newHeaderList.append(item.replace(str,"")) for item in data_to_insert[0] if str in item]
+        
+            data_to_insert[0]=newHeaderList
+    
+            ws.range((row, column)).value = data_to_insert
+            ws.autofit(axis="columns")
 
-        # Insert data
-        ws.range((row, column)).value = data_to_insert
+            # 3. collect the result data to be used later
 
-        # Save and Close the Excel template file
-        wb.save()
-        wb.close()
+            # find the numbers of columns and rows in the sheet
+            num_col = 53
+            num_row = ws.range('BA2').end('down').row
+            self.resultLabels=ws.range('BA:BA')[1:].value
+            # collect data
 
-        # Close Excel
-        xl_app.quit()
+            custom_content_list=[item for item in tdms_file.properties.keys()]
+
+            content_list = ws.range((2,num_col),(num_row,num_col)).value
+            result_list=   ws.range((2,num_col+1),(num_row,num_col+1)).value
+
+            content_list=  custom_content_list + ["TestName"] + content_list 
+         
+            prop_list=[]
+            for item in custom_content_list:
+                prop_list.append(tdms_file.properties[item])
+
+            result_list=prop_list+ [featureName] + result_list
+      
+            
+            self.resultDict.update({tdms_file.properties['name']:result_list})
+
+            if not("content_list" in self.resultDict.keys()):
+                self.resultDict.update({"content_list":content_list})
+
+            # Save and Close the Excel template file
+            wb.save()
+            wb.close()
+
+            # Close Excel
+            xl_app.quit()
+            # subprocess.call(["taskkill", "/f", "/im", "EXCEL.EXE"])
+            return self.resultDict
+
+        except: # close the started excel to not pose a problem later on
+            # Close Excel
+            xl_app.quit()
+
 
 
 
