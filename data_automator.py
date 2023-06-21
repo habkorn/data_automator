@@ -47,6 +47,7 @@ class CSI_AUTOMATOR(QWidget):
         smallFont = QFont('Arial', 14)
         bigFont = QFont('Arial', 20)
 
+        self.workingDir=""
 
         self.tdms_excel=TDMS_EXCEL()
         self.functions = [self.procTDMSDataforCSI, self.procEmpty]
@@ -151,9 +152,15 @@ class CSI_AUTOMATOR(QWidget):
             # hSpacer = QSpacerItem(350, 40, QSizePolicy.Maximum, QSizePolicy.Expanding)
             # self.optionsLayout.addItem(hSpacer)
 
-            xlsxTemplateFiles = glob.glob(os.getcwd() + '/' + Const.EXCEL_TEMPLATEFOLDER + r'/*.xlsx')
+            self.workingDir=os.getcwd() + '/'
+            
+            xlsxTemplateFiles = glob.glob(self.workingDir + Const.EXCEL_TEMPLATEFOLDER + r'/*.xlsx')
 
-            self.excelTemplateFilesPath = [item for item in xlsxTemplateFiles if not "~" in item ]
+            if len(xlsxTemplateFiles)==0:
+                self.workingDir=os.getcwd() + '/dist/'
+                xlsxTemplateFiles = glob.glob(self.workingDir + Const.EXCEL_TEMPLATEFOLDER + r'/*.xlsx')
+
+            self.excelTemplateFilesPath = [item.replace("/","\\") for item in xlsxTemplateFiles if not "~" in item ]
             self.excelTemplateFilesPath = [item for item in self.excelTemplateFilesPath if not "Result_Collection_Template" in item]
 
             self.label2.setText("Found Templates (" + str(len (self.excelTemplateFilesPath)) + ")")
@@ -194,15 +201,17 @@ class CSI_AUTOMATOR(QWidget):
         # dialog.setFileMode(QFileDialog.DirectoryOnly)
         # dialog.setOption(QFileDialog.ShowDirsOnly, False)
 
-        settings_file_path=os.getcwd() + "/settings.json".replace("/","\\")
         
-        if not os.path.isfile(os.getcwd() + "/settings.json".replace("/","\\")):
-            settings_file = open(os.getcwd() + "/settings.json".replace("/","\\"), "w")
+       
+        settings_file_path=(self.workingDir + "settings.json").replace("/","\\")
+        
+        if not os.path.isfile(settings_file_path):
+            settings_file = open(settings_file_path, "w")
             self.jsonDict={"lastDir": os.getcwd()}
             json.dump(self.jsonDict, settings_file, indent = 6)
             settings_file.close()
 
-        settings_file = open(os.getcwd() + "/settings.json".replace("/","\\"))
+        settings_file = open(settings_file_path)
         settings_data = json.load(settings_file)
         settings_file.close()
 
@@ -300,12 +309,12 @@ class CSI_AUTOMATOR(QWidget):
                     
                         
                 # 1. convert_data_to_csv
+                logging.info("Processing started, please wait...")
                 num=1
                 for tdmsFile in tdmsFiles: 
 
 
                     startTimeLoadFile = time.time()
-                    logging.info("Processing started, please wait...")
 
                     with TdmsFile.read(tdmsFile, memmap_dir=os.getcwd()) as tdms_file:
                         endTimeLoadTime = time.time()
@@ -318,7 +327,7 @@ class CSI_AUTOMATOR(QWidget):
 
                         excelDestPath=self.selectedDir + "/"+ featureName +  "--" + tdmsFileName.split(".tdms")[0]  + ".xlsx"
                         
-                        exceldataDestPath=self.tdms_excel.copy_template_excel_file(excelDestPath, excelTemplateFilePath)
+                        exceldataDestPath=self.tdms_excel.copy_template_excel_file(excelDestPath, excelTemplateFilePath.replace("/","\\"))
                         
                         # Process events between short sleep periods
                         QtWidgets.QApplication.processEvents()
@@ -334,12 +343,14 @@ class CSI_AUTOMATOR(QWidget):
 
                         logging.info("...done.")
 
+                        num=num+1
+
                 
                 # 2. run the result collection 
 
-                excelDestPath=self.selectedDir + "/"+ "Result_Collection" +  "--" + mst_name  + ".xlsx"
+                excelDestPath=(self.selectedDir + "/"+ "Result_Collection" +  "--" + mst_name  + ".xlsx").replace("/","\\")
                 
-                excelresultDestPath=self.tdms_excel.copy_template_excel_file(excelDestPath,os.getcwd() + '/' + Const.EXCEL_TEMPLATEFOLDER + r'/Result_Collection_Template.xlsx')
+                excelresultDestPath=self.tdms_excel.copy_template_excel_file(excelDestPath,(self.workingDir + Const.EXCEL_TEMPLATEFOLDER + r'/Result_Collection_Template.xlsx').replace("/","\\"))
                 
                 logging.info("Result Generation.. File: " + excelresultDestPath)       
                 self.tdms_excel.write_result_to_excel_template(excelresultDestPath)
