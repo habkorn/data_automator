@@ -344,11 +344,16 @@ class TDMS_EXCEL():
                 rpm_part.append(rpm_t)
                 current_part.append(current_t)
 
+
+            rpm_k=[]
+            current_k=[]
             for k,p in enumerate(rpm_part):
-                if not k>=len(rpm_part):
-                    if np.std(rpm_part[k])<=0.05:
-                        rpm_part=np.delete(rpm_part,k)
-                        current_part=np.delete(current_part,k)
+                    if np.std(rpm_part[k])>=0.05:
+                        rpm_k.append(rpm_part[k]) 
+                        current_k.append(current_part[k]) 
+
+            rpm_part=np.array(rpm_k)
+            current_part=np.array(current_k)
 
             for k,p in enumerate(rpm_part):
                 # remove outliers, i.e. anything below rpm threshold
