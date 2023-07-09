@@ -7,6 +7,7 @@ import csv
 from Util import Const
 from Util import Functions as fnc
 from Util import InvalidFilePathLengthException
+import matplotlib.pyplot as plt
 
 import subprocess
 import os
@@ -16,6 +17,7 @@ import time
 from pandas import ExcelWriter
 import openpyxl
 import xlwings as xw
+from xlwings.utils import rgb_to_int
 from pathlib import Path
 
 class TDMS_EXCEL():
@@ -164,12 +166,14 @@ class TDMS_EXCEL():
                     ws_res.range((row+1, column-1)).add_hyperlink(item)  
 
                 except:
-                    ws_res.range((row+1, column-1)).value=str(item)
+                    ws_res.range((row+1, column-1)).value=str(item).replace("/","\\")
                     pass 
 
                 ws_res.range((row+1, column-1)).api.WrapText = True  
                 ws_res.range((row+1, column-1)).column_width = 26
                 ws_res.range((row+1, column-1)).row_height = 21
+
+
 
                 row=row+1
                 
@@ -182,12 +186,14 @@ class TDMS_EXCEL():
             ws_res_t = wb.sheets('Result_transponiert')
             ws_res_t.range('A1').options(transpose=True).value=content_list
 
-
+            ws_res_t.range((14, 3),(27, 3)).api.Font.Color = rgb_to_int((0, 0, 255))
 
             for num_col in range(0, len(self.resultDict.keys())):
                 try:
                     val=ws_res_t.range((1, num_col+4)).value
                     ws_res_t.range((1, num_col+4)).add_hyperlink(val)  
+                # 14-27
+                    ws_res_t.range((14, num_col+4),(27, num_col+4)).api.Font.Color = rgb_to_int((0, 0, 255))
 
                 except:
                     # do nothing
@@ -234,22 +240,211 @@ class TDMS_EXCEL():
             xl_app.quit()
             raise Exception("location: write_result_to_excel_template")
 
-    def dump_large_array_to_excel(self, ws, startrow, startcolumn, data_to_insert):
+    def dump_large_array_to_excel(self, ws, wb, startrow, startcolumn, data,transp):
 
         row=startrow
         col=startcolumn
         
-        if len(data_to_insert) <= (Const.EXCEL_MAX_CHUNK_SIZE + 1):
-            ws.range((row, col)).value = data_to_insert
+        if len(data) <= (Const.EXCEL_MAX_CHUNK_SIZE + 1):
+            ws.range((row, col)).value = data
         else:
-            for chunk in (data_to_insert[rw:rw + Const.EXCEL_MAX_CHUNK_SIZE] 
-                for rw in range(0, len(data_to_insert), Const.EXCEL_MAX_CHUNK_SIZE)):
+            for chunk in (data[rw:rw + Const.EXCEL_MAX_CHUNK_SIZE] 
+                for rw in range(0, len(data), Const.EXCEL_MAX_CHUNK_SIZE)):
                     # ws.range('Source', row + str(column), index = False, header = False).value = chunk
-                    ws.range((row,col)).value = chunk
+                    
+                    if transp: 
+                        ws.range((row,col)).options(transpose=True).value = chunk
+                        # print(row)
+                    else: 
+                        ws.range((row,col)).value = chunk
                     row += Const.EXCEL_MAX_CHUNK_SIZE
 
+        # print("!!")
+        
+    def filterData(self,featureName,data_from_csv):
+        
+        data=data_from_csv.copy() # default
+        filteredData=None
 
-    def write_data_to_excel_template_start_macro(self, template_file, data_to_insert, featureName,tdms_file):
+        ########### general filter
+        # rename the columns, exclude some annoying parts
+
+        search_str=["Analog-IO --> ","TC --> "]  # default search Strings
+
+        newHeaderList=[]
+        for _str in search_str:
+            [newHeaderList.append(item.replace(_str,"")) for item in data[0] if _str in item]
+
+        data[0]=newHeaderList
+
+        filteredData=np.array(data).transpose().tolist()
+
+        ########### feature specific filter
+
+        if featureName=="F2-F3 RPM": # reduce the columns and and limit the data
+            
+            search_str=["Drehzahl","Strom_LD_Ebene_2"]
+            newHeaderList=[]
+            temp_data_to_insert=[]
+
+            for _str in search_str:
+                kk=0
+                for item in data_from_csv[0]:
+                    if  _str in item:
+                        idx_LD_AGD=[]
+                        [idx_LD_AGD.append(data[kkk][kk]) for kkk in range(0,len(data)-1)]
+                        idx_LD_AGD=[idx_LD_AGD]
+                        idx_LD_AGD=[list(i) for i in zip(*idx_LD_AGD)]
+                        # del data_to_insert[:][kk]
+                        temp_data_to_insert.append(idx_LD_AGD)
+                    kk=kk+1
+            
+            temp_data_to_insert=[list(i) for i in zip(*temp_data_to_insert)]
+
+            flat_list=[]
+            for sublist in temp_data_to_insert:
+                flat_sublist = []
+                
+                for item in sublist: 
+                    flat_sublist.append(item[0])
+                
+                flat_list.append(flat_sublist)
+            
+
+            np_arr = np.array(flat_list[1:]) 
+            np_arr=np_arr.astype(np.float)
+        
+            tp_arr = np_arr.transpose()
+            rpm_sig=tp_arr[0]
+            current_sig=tp_arr[1]
+
+            # rpm_sig = rpm_sig > 4
+            # current_sig = current_sig > 1
+
+            # idx_LD_AGD_level_up_flank=np.where(np.logical_and(rpm_sig > 4, current_sig > 1))[0]
+            idx_LD_AGD_level_up_flank=np.where(rpm_sig >= 4.)[0]
+            
+            
+            partitions=idx_LD_AGD_level_up_flank[np.where(np.diff(idx_LD_AGD_level_up_flank)!=1)]
+            
+            partitions = np.insert(partitions, 0, idx_LD_AGD_level_up_flank[0])
+
+            # lastlen=0
+            # while not lastlen==len(partitions):
+            #     lastlen=len(partitions)
+            #     partitions = np.delete(partitions, np.where(np.diff(partitions) < 1000))
+
+            rpm_part=[]
+            current_part=[]
+
+            for i in range(1,len(partitions)):
+                rpm_t=rpm_sig[partitions[i-1]:partitions[i]]
+                current_t=current_sig[partitions[i-1]:partitions[i]]
+
+                rpm_part.append(rpm_t)
+                current_part.append(current_t)
+
+            for k,p in enumerate(rpm_part):
+                if not k>=len(rpm_part):
+                    if np.std(rpm_part[k])<=0.05:
+                        rpm_part=np.delete(rpm_part,k)
+                        current_part=np.delete(current_part,k)
+
+            for k,p in enumerate(rpm_part):
+                # remove outliers, i.e. anything below rpm threshold
+                idx_del=np.where(p < 4.)
+
+        
+                rpm_part[k]=np.delete(rpm_part[k],idx_del)
+                current_part[k]=np.delete(current_part[k],idx_del)
+
+            
+            rpm_tt=[]
+            current_tt=[]
+
+            for k,p in enumerate(rpm_part):
+                if len(rpm_part[k])>=100: 
+                    rpm_tt.append(rpm_part[k])
+                    current_tt.append(current_part[k])
+
+            
+            rpm_part=rpm_tt
+            current_part=current_tt
+
+            for k,p in enumerate(rpm_part):
+                # remove outliers, i.e. anything below rpm threshold
+                idx_del=np.where(p<=np.percentile(p, 1))
+
+                rpm_part[k]=np.delete(rpm_part[k],idx_del)
+                current_part[k]=np.delete(current_part[k],idx_del)
+
+
+            revs=[]
+ 
+
+            for p in rpm_part:
+                revs.append(np.mean(p)*1000./60.*len(p)/1000.)
+
+            # for k,p in enumerate(rpm_part):
+
+            #     xpoints = np.array(range(0,len(p)))
+            #     ypoints = np.array(p)
+            #     plt.subplot(1, len(rpm_part), k+1)
+            #     plt.plot(xpoints, ypoints)
+                
+            #     print(f'{k+1}' + ": " +  f'{np.std(p)}')
+  
+            # plt.show()
+
+
+            tp_flat_list = np.array(flat_list[1:]).transpose()
+            
+
+            temp_arr=[]
+
+            for i,p in enumerate(tp_flat_list):
+                temp_arr.append(tp_flat_list[i].tolist())
+
+            temp_arr[0]=["Drehzahl"]+temp_arr[0]
+            temp_arr[1]=["Strom_LD_Ebene_2"]+temp_arr[1]
+            
+            
+            for i,sublist in enumerate(rpm_part):
+                rp=rpm_part[i].astype(str)
+                rp=np.insert(rp,0," ")
+                rp=np.insert(rp,0,str(revs[i]))
+
+                if i%2==0: 
+                    temp_arr.append(["Drehzahl, Filter LL " + str(int(i/2))]+rp.tolist())
+                else: 
+                    temp_arr.append(["Drehzahl, Filter AGD " + str(int(i/2))]+rp.tolist())
+            
+
+            for i,sublist in enumerate(current_part):
+                    if i%2==0: 
+                        temp_arr.append(["Strom_LD_Ebene_2, Filter LL "+ str(int(i/2))]+current_part[i].astype(str).tolist())
+                    else: 
+                        temp_arr.append(["Strom_LD_Ebene_2, Filter AGD "+ str(int(i/2))]+current_part[i].astype(str).tolist())
+             
+   
+            # flat_list=[]
+            # # flat_list = [list(i) for i in zip(*temp_arr)]
+            # c=0
+            # for i in zip(*temp_arr):
+            #     if c>0 :
+            #         flat_list.append([float(ii) for ii in i])
+            #     else:
+            #         flat_list.append(list(i))
+                
+            #     c=c+1
+                                
+
+            filteredData=temp_arr
+
+        return filteredData
+
+
+    def write_data_to_excel_template_start_macro(self, template_file, data_to_insert, filtered_data,featureName,tdms_file):
         """
         Inserting data to an existing Excel data table
         :param template_file: path of the Excel template file
@@ -271,7 +466,7 @@ class TDMS_EXCEL():
             row = 1
             column = 1
             # 1. Insert ALL data to the Source Worksheet
-            self.dump_large_array_to_excel(ws, row, column, data_to_insert)
+            self.dump_large_array_to_excel(ws, wb,row, column, data_to_insert,False)
 
             ws.autofit(axis="columns")
 
@@ -279,61 +474,34 @@ class TDMS_EXCEL():
             ws = wb.sheets(featureName)
             row = 1
             column = 1
-            # however this time, rename the columns
-            # Insert data
-            search_str=["Analog-IO --> ","TC --> "]  # default search Strings
-
-            newHeaderList=[]
-            for str in search_str:
-                [newHeaderList.append(item.replace(str,"")) for item in data_to_insert[0] if str in item]
-
-            data_to_insert[0]=newHeaderList
-            
-            if featureName=="F2-F3 RPM": 
-                
-                search_str=["Drehzahl","Strom_LD_Ebene_2"]
-                newHeaderList=[]
-                temp_data_to_insert=[]
-
-                for str in search_str:
-                    kk=0
-                    for item in data_to_insert[0]:
-                        kk=kk+1
-                        if not str in item:
-                            temp_data_to_insert.append(data_to_insert[:][kk])
-                            # del data_to_insert[:][kk]
-
-                data_to_insert[0]=newHeaderList
-
-        
-            
+           
 
             # wb.sheets('Source').range('A1').end('down').end('right')
 
             # ws.range((row, column)).value=wb.sheets('Source').used_range.value
     
-            self.dump_large_array_to_excel(ws, row, column, data_to_insert)
+            for i,p in enumerate(filtered_data):
+                self.dump_large_array_to_excel(ws, wb,row, column+i,  p,True)
 
-
+            ws.autofit(axis="columns")
              # erase unuseful range in excel, e.g. exclude columns "F" to "P"
             # search fur the column names with only 1 letter
 
             discarded_columns=[]
             shift_alphabet=3
             
-
+           
+            newHeaderList=ws.range((1,1),(1,20))
             for item in newHeaderList:
                 
-                if len(item)==1: 
-                    excel_column=chr(ord(item)+shift_alphabet)
+                if len(str(item.value))==1: 
+                    excel_column=chr(ord(str(item.value))+shift_alphabet)
                     discarded_columns.append(excel_column + ":"+ excel_column)
 
             # delete the discarded columns
-
             for item in discarded_columns:
                 ws.range(item)[1:].clear_contents()
             
-
 
             ws.autofit(axis="columns")
 
@@ -344,10 +512,13 @@ class TDMS_EXCEL():
             num_row = ws.range('BB2').end('down').row
             self.resultLabels=ws.range('BB:BB')[1:].value
 
-            vb_macro = wb.macro("calc100msAvgMAX")
-            
-            if vb_macro()==False: logging.error("The TDMS File "+ (template_file.split("/")[-1]).replace(".xlsm","")+".tdms" +" is corrupted in some way. Please check the data carefully.")
+            vb_macro = wb.macro("vbMacro")
 
+
+
+            if vb_macro()==False: 
+                logging.error("The TDMS File "+ (template_file.split("/")[-1]).replace(".xlsm","")+".tdms" +" is corrupted in some way. Please check the data carefully.")
+            else: logging.info("vbMacro successful.")
             
             # collect result data
 
@@ -357,7 +528,7 @@ class TDMS_EXCEL():
             result_list=   ws.range((2,num_col+1),(num_row,num_col+1)).value
 
             content_list=  custom_content_list + ["TestName"] + content_list 
-         
+            ws.autofit(axis="columns")
             prop_list=[]
             for item in custom_content_list:
                 prop_list.append(tdms_file.properties[item])
