@@ -88,7 +88,7 @@ class CSI_AUTOMATOR(QWidget):
         self.selectedDir=None
         # self.resize(737, 596)
 
-        self.setWindowTitle("Data Automator V1.4.0")
+        self.setWindowTitle("Data Automator V1.4.7")
         self.setWindowIcon(QtGui.QIcon("icon.png"))
 
         layout = QVBoxLayout()
@@ -207,7 +207,8 @@ class CSI_AUTOMATOR(QWidget):
     def procEmpty(self):
         print('Got Nothing')
 
-        
+
+
     def procTDMSDataforCSI(self):
 
         # dialog = QFileDialog(self, 'Select a folder containing TDMS files', os.getcwd())
@@ -366,7 +367,7 @@ class CSI_AUTOMATOR(QWidget):
                             logging.info(" CSV File created in " + str(round(time.time()-startTimeLoadFile,1)) + "s : " + tdmsFileName.split(".tdms")[0] + "--" + featureName + ".txt ")
                             QtWidgets.QApplication.processEvents()
 
-                            excelDestPath=self.selectedDir + "/"+ featureName +  "--" + tdmsFileName.split(".tdms")[0]  + ".xlsm"
+                            excelDestPath=(self.selectedDir + "/"+ featureName +  "--" + tdmsFileName.split(".tdms")[0]  + ".xlsm").replace("#","_")
                             
                             
                             exceldataDestPath=self.tdms_excel.copy_template_excel_file(excelDestPath, excelTemplateFilePath.replace("/","\\"))
@@ -383,7 +384,10 @@ class CSI_AUTOMATOR(QWidget):
                             # delete the csv file (if it exists)
                             os.remove(csvFilepath)
 
-                            result_dict=self.tdms_excel.write_data_to_excel_template_start_macro(exceldataDestPath, data_from_csv,featureName,tdms_file)
+                            # do some filtering for certain templates
+                            filtered_data=self.tdms_excel.filterData(featureName,data_from_csv)
+                            
+                            result_dict=self.tdms_excel.write_data_to_excel_template_start_macro(exceldataDestPath, data_from_csv,filtered_data,featureName,tdms_file)
 
                             logging.info("...done in "+ str(round(time.time()-startTimeLoadFile,1)) +"s : Filename: " + exceldataDestPath)
 
@@ -395,7 +399,7 @@ class CSI_AUTOMATOR(QWidget):
                     logging.info(" ")
                     logging.info("==============================")
 
-                    excelDestPath=(self.selectedDir + "/"+ "Result_Collection" +  "--" + mst_name + " -- "  + featureName + ".xlsm").replace("/","\\")
+                    excelDestPath=(self.selectedDir + "/"+ "Result_Collection" +  "--" + mst_name + " -- "  + featureName + ".xlsm").replace("/","\\").replace("#","_")
                     
                     excelresultDestPath=self.tdms_excel.copy_template_excel_file(excelDestPath,(self.workingDir + Const.EXCEL_TEMPLATEFOLDER + '/' + Const.EXCEL_RESULT_FILENAME).replace("/","\\"))
                     
