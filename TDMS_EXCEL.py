@@ -344,17 +344,6 @@ class TDMS_EXCEL():
                 rpm_part.append(rpm_t)
                 current_part.append(current_t)
 
-
-            rpm_k=[]
-            current_k=[]
-            for k,p in enumerate(rpm_part):
-                    if np.std(rpm_part[k])>=0.05:
-                        rpm_k.append(rpm_part[k]) 
-                        current_k.append(current_part[k]) 
-
-            rpm_part=np.array(rpm_k)
-            current_part=np.array(current_k)
-
             for k,p in enumerate(rpm_part):
                 # remove outliers, i.e. anything below rpm threshold
                 idx_del=np.where(p < 4.)
@@ -384,6 +373,17 @@ class TDMS_EXCEL():
                 current_part[k]=np.delete(current_part[k],idx_del)
 
 
+            rpm_k=[]
+            current_k=[]
+            for k,p in enumerate(rpm_part):
+                    if np.std(rpm_part[k])>=0.025:
+                        rpm_k.append(rpm_part[k]) 
+                        current_k.append(current_part[k]) 
+
+            rpm_part=rpm_k
+            current_part=current_k
+            
+            
             revs=[]
  
 
@@ -414,22 +414,41 @@ class TDMS_EXCEL():
             temp_arr[1]=["Strom_LD_Ebene_2"]+temp_arr[1]
             
             
+            captionString=[]
+            captionString.append("Drehzahl, Filter LL ")
+            captionString.append("Drehzahl, Filter AGD ")
+            captionString.append("Drehzahl, Filter LL|AGD ")
+            captionString.append("Strom_LD_Ebene_2, Filter LL ")
+            captionString.append("Strom_LD_Ebene_2, Filter AGD ")
+            captionString.append("Strom_LD_Ebene_2, Filter LL|AGD  ")
+
+
+            actCaptionString=["","","",""]
+            if len(rpm_part)>1: 
+                actCaptionString[0]=captionString[0]
+                actCaptionString[1]=captionString[1]
+                actCaptionString[2]=captionString[3]
+                actCaptionString[3]=captionString[4]
+            else:
+                actCaptionString[0]=captionString[2]
+                actCaptionString[2]=captionString[5]
+            
             for i,sublist in enumerate(rpm_part):
                 rp=rpm_part[i].astype(str)
                 rp=np.insert(rp,0," ")
                 rp=np.insert(rp,0,str(revs[i]))
 
                 if i%2==0: 
-                    temp_arr.append(["Drehzahl, Filter LL " + str(int(i/2))]+rp.tolist())
+                    temp_arr.append([actCaptionString[0] + str(int(i/2))]+rp.tolist())
                 else: 
-                    temp_arr.append(["Drehzahl, Filter AGD " + str(int(i/2))]+rp.tolist())
+                    temp_arr.append([actCaptionString[1] + str(int(i/2))]+rp.tolist())
             
 
             for i,sublist in enumerate(current_part):
                     if i%2==0: 
-                        temp_arr.append(["Strom_LD_Ebene_2, Filter LL "+ str(int(i/2))]+current_part[i].astype(str).tolist())
+                        temp_arr.append([actCaptionString[2]+ str(int(i/2))]+current_part[i].astype(str).tolist())
                     else: 
-                        temp_arr.append(["Strom_LD_Ebene_2, Filter AGD "+ str(int(i/2))]+current_part[i].astype(str).tolist())
+                        temp_arr.append([actCaptionString[3]+ str(int(i/2))]+current_part[i].astype(str).tolist())
              
    
             # flat_list=[]
