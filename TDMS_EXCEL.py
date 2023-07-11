@@ -321,13 +321,20 @@ class TDMS_EXCEL():
             # rpm_sig = rpm_sig > 4
             # current_sig = current_sig > 1
 
-            # idx_LD_AGD_level_up_flank=np.where(np.logical_and(rpm_sig > 4, current_sig > 1))[0]
-            idx_LD_AGD_level_up_flank=np.where(rpm_sig >= 4.)[0]
+            RPM_THRESHOLD=5.
+
+            # idx_LD_AGD_level_up_flank=np.where(np.logical_and(rpm_sig > RPM_THRESHOLD, current_sig > 1))[0]
+            idx_LD_AGD_level_up_flank=np.where(rpm_sig >= RPM_THRESHOLD)[0]
             
             
             partitions=idx_LD_AGD_level_up_flank[np.where(np.diff(idx_LD_AGD_level_up_flank)!=1)]
             
-            partitions = np.insert(partitions, 0, idx_LD_AGD_level_up_flank[0])
+            if len(partitions)==0 or len(partitions)==1: 
+                partitions=[idx_LD_AGD_level_up_flank.min(),idx_LD_AGD_level_up_flank.max()]
+
+            else: 
+                partitions = np.insert(partitions, 0, idx_LD_AGD_level_up_flank[0])
+
 
             # lastlen=0
             # while not lastlen==len(partitions):
@@ -346,7 +353,7 @@ class TDMS_EXCEL():
 
             for k,p in enumerate(rpm_part):
                 # remove outliers, i.e. anything below rpm threshold
-                idx_del=np.where(p < 4.)
+                idx_del=np.where(p < RPM_THRESHOLD)
 
         
                 rpm_part[k]=np.delete(rpm_part[k],idx_del)
@@ -376,7 +383,7 @@ class TDMS_EXCEL():
             rpm_k=[]
             current_k=[]
             for k,p in enumerate(rpm_part):
-                    if np.std(rpm_part[k])>=0.025:
+                    if np.std(rpm_part[k])>=0.02:
                         rpm_k.append(rpm_part[k]) 
                         current_k.append(current_part[k]) 
 
@@ -387,8 +394,29 @@ class TDMS_EXCEL():
             revs=[]
  
 
+            
             for p in rpm_part:
                 revs.append(np.mean(p)*1000./60.*len(p)/1000.)
+
+            'handle the case when only one signal is found'
+            if len(revs)==1:
+                if revs[0]<3000: 
+                    'LL'
+                    revs.append(revs[0])
+                    revs[0]=0
+                    rpm_part.append(rpm_part[0].copy())
+                    for i,e in enumerate(rpm_part[0]): rpm_part[0][i]=0 
+
+                    current_part.append(current_part[0].copy())
+                    for i,e in enumerate(current_part[0]): current_part[0][i]=0 
+
+                else:
+                    revs.append(0)
+                    rpm_part.append(rpm_part[0].copy())
+                    for i,e in enumerate(rpm_part[1]): rpm_part[1][i]=0
+
+                    current_part.append(current_part[0].copy())
+                    for i,e in enumerate(current_part[1]): current_part[1][i]=0 
 
             # for k,p in enumerate(rpm_part):
 
@@ -414,24 +442,6 @@ class TDMS_EXCEL():
             temp_arr[1]=["Strom_LD_Ebene_2"]+temp_arr[1]
             
             
-            captionString=[]
-            captionString.append("Drehzahl, Filter LL ")
-            captionString.append("Drehzahl, Filter AGD ")
-            captionString.append("Drehzahl, Filter LL|AGD ")
-            captionString.append("Strom_LD_Ebene_2, Filter LL ")
-            captionString.append("Strom_LD_Ebene_2, Filter AGD ")
-            captionString.append("Strom_LD_Ebene_2, Filter LL|AGD  ")
-
-
-            actCaptionString=["","","",""]
-            if len(rpm_part)>1: 
-                actCaptionString[0]=captionString[0]
-                actCaptionString[1]=captionString[1]
-                actCaptionString[2]=captionString[3]
-                actCaptionString[3]=captionString[4]
-            else:
-                actCaptionString[0]=captionString[2]
-                actCaptionString[2]=captionString[5]
             
             for i,sublist in enumerate(rpm_part):
                 rp=rpm_part[i].astype(str)
@@ -439,17 +449,17 @@ class TDMS_EXCEL():
                 rp=np.insert(rp,0,str(revs[i]))
 
                 if i%2==0: 
-                    temp_arr.append([actCaptionString[0] + str(int(i/2))]+rp.tolist())
+                    temp_arr.append(["Umdrehungen, Filter A " + str(int(i/2))]+rp.tolist())
                 else: 
-                    temp_arr.append([actCaptionString[1] + str(int(i/2))]+rp.tolist())
+                    temp_arr.append(["Umdrehungen, Filter B " + str(int(i/2))]+rp.tolist())
             
 
             for i,sublist in enumerate(current_part):
                     if i%2==0: 
-                        temp_arr.append([actCaptionString[2]+ str(int(i/2))]+current_part[i].astype(str).tolist())
+                        temp_arr.append(["Strom_LD_Ebene_2, Filter A "+ str(int(i/2))]+current_part[i].astype(str).tolist())
                     else: 
-                        temp_arr.append([actCaptionString[3]+ str(int(i/2))]+current_part[i].astype(str).tolist())
-             
+                        temp_arr.append(["Strom_LD_Ebene_2, Filter B "+ str(int(i/2))]+current_part[i].astype(str).tolist())
+              
    
             # flat_list=[]
             # # flat_list = [list(i) for i in zip(*temp_arr)]
@@ -532,9 +542,7 @@ class TDMS_EXCEL():
             # 3. collect the result data to be used later
 
             # find the numbers of columns and rows in the sheet
-            num_col = 54
-            num_row = ws.range('BB2').end('down').row
-            self.resultLabels=ws.range('BB:BB')[1:].value
+
 
             vb_macro = wb.macro("vbMacro")
 
@@ -545,6 +553,12 @@ class TDMS_EXCEL():
             else: logging.info("vbMacro successful.")
             
             # collect result data
+
+            num_col = 54
+            num_row = ws.range('BB2').end('down').row
+            if num_row>100:num_row=100
+
+            self.resultLabels=ws.range('BB:BB')[1:num_row].value
 
             custom_content_list=[item for item in tdms_file.properties.keys()]
 

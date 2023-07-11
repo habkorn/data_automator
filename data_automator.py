@@ -88,7 +88,7 @@ class CSI_AUTOMATOR(QWidget):
         self.selectedDir=None
         # self.resize(737, 596)
 
-        self.setWindowTitle("Data Automator V1.4.7")
+        self.setWindowTitle("Data Automator V1.4.8")
         self.setWindowIcon(QtGui.QIcon("icon.png"))
 
         layout = QVBoxLayout()
@@ -372,10 +372,7 @@ class CSI_AUTOMATOR(QWidget):
                             
                             exceldataDestPath=self.tdms_excel.copy_template_excel_file(excelDestPath, excelTemplateFilePath.replace("/","\\"))
                             
-                            # Process events between short sleep periods
-                            QtWidgets.QApplication.processEvents()
-                            # time.sleep(0.1)
-                            logging.info(str(num)+ "/" + str(len(tdmsFiles)) + ": Create Excel file...")
+
                             
                             startTimeLoadFile = time.time()
 
@@ -387,6 +384,12 @@ class CSI_AUTOMATOR(QWidget):
                             # do some filtering for certain templates
                             filtered_data=self.tdms_excel.filterData(featureName,data_from_csv)
                             
+
+                            # Process events between short sleep periods
+                            QtWidgets.QApplication.processEvents()
+                            # time.sleep(0.1)
+                            logging.info(str(num)+ "/" + str(len(tdmsFiles)) + ": Create Excel file...")
+
                             result_dict=self.tdms_excel.write_data_to_excel_template_start_macro(exceldataDestPath, data_from_csv,filtered_data,featureName,tdms_file)
 
                             logging.info("...done in "+ str(round(time.time()-startTimeLoadFile,1)) +"s : Filename: " + exceldataDestPath)
