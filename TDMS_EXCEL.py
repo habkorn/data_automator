@@ -392,18 +392,23 @@ class TDMS_EXCEL():
             
             
             revs=[]
- 
+            lieferzeiten=[]
 
             
             for p in rpm_part:
                 revs.append(np.mean(p)*1000./60.*len(p)/1000.)
+                lieferzeiten.append(len(p)/1000.)
 
             'handle the case when only one signal is found'
             if len(revs)==1:
                 if revs[0]<3000: 
-                    'LL'
+                    'Gewichtsverstellung'
                     revs.append(revs[0])
                     revs[0]=0
+
+                    lieferzeiten.append(lieferzeiten[0])
+                    lieferzeiten[0]=0
+
                     rpm_part.append(rpm_part[0].copy())
                     for i,e in enumerate(rpm_part[0]): rpm_part[0][i]=0 
 
@@ -411,7 +416,10 @@ class TDMS_EXCEL():
                     for i,e in enumerate(current_part[0]): current_part[0][i]=0 
 
                 else:
+                    'Lieferleistung'
                     revs.append(0)
+                    lieferzeiten.append(0)
+
                     rpm_part.append(rpm_part[0].copy())
                     for i,e in enumerate(rpm_part[1]): rpm_part[1][i]=0
 
@@ -447,6 +455,8 @@ class TDMS_EXCEL():
                 rp=rpm_part[i].astype(str)
                 rp=np.insert(rp,0," ")
                 rp=np.insert(rp,0,str(revs[i]))
+                rp=np.insert(rp,0,str(lieferzeiten[i]))
+                rp=np.insert(rp,0,str(np.max(current_part[i])))
 
                 if i%2==0: 
                     temp_arr.append(["Umdrehungen, Filter A " + str(int(i/2))]+rp.tolist())
