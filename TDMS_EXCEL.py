@@ -37,7 +37,7 @@ class TDMS_EXCEL():
 
 
         self.startRowInResultsFile=3
-        self.startColumnInResultsFile=2
+        self.startColumnInResultsFile=1
 
 
     def copy_template_excel_file(self,excelDestPath,excelTemplateFilePath):
@@ -139,45 +139,76 @@ class TDMS_EXCEL():
 
             row = self.startRowInResultsFile
             column = self.startColumnInResultsFile
-            # 1. Insert data to the Result Worksheet
+
+            # find the result file with the most entries and write the first line with captions
+            lenEnt=-1
+            savKey=[]
+            for item in self.resultDict.keys():
+
+                for iitem in self.resultDict[item].keys():
+
+                    if lenEnt<len(self.resultDict[item].keys()): 
+                        lenEnt=len(self.resultDict[item].keys())
+                        savKey=item
+
             
-            ws_res.range((row, column-1)).value="Link"
+            
+            ws_res.range((row, 1)).value="Link"
+
+            num=0
+            for iitem in self.resultDict[savKey].keys():
+
+                ws_res.range((row, 2+num)).value=iitem
+                num=num+1
+
+
+            # 1. Insert data to the Result Worksheet and find the correct cell
 
             for item in self.resultDict.keys():
 
                 for iitem in self.resultDict[item].keys():
-                    # write the label
-                    if row==self.startRowInResultsFile:ws_res.range((row, column)).value = iitem
+                    
+                    # search for the label in the excel file. If it is not found, write new column
+                    column=-1
+
+                    for col in range(1, lenEnt+10):
+                        if ws_res.range((3,col)).value == iitem:
+                            column=col
+
+                    if column==-1:
+                        print("!!")
                     # write the value
                     ws_res.range((row+1, column)).value = self.resultDict[item][iitem]
 
-   
-                    if row==self.startRowInResultsFile+1: ws_res.autofit(axis="columns")
+
 
                     # ws.range((row, column+1)).api.WrapText = True
                     # ws.range((row-1, column+1)).api.WrapText = True
                     # ws.range((row, column+1)).column_width = 40
                     # ws.range((row, column+1)).row_height = 40
-                    column=column+1
 
-                column = self.startColumnInResultsFile
+                    # column=column+1
+
+                # column = self.startColumnInResultsFile
                 
                 try:
-                    ws_res.range((row+1, column-1)).add_hyperlink(item)  
+                    ws_res.range((row+1, 1)).add_hyperlink(item)  
 
                 except:
-                    ws_res.range((row+1, column-1)).value=str(item).replace("/","\\")
+                    ws_res.range((row+1, 1)).value=str(item).replace("/","\\")
                     pass 
 
-                ws_res.range((row+1, column-1)).api.WrapText = True  
-                ws_res.range((row+1, column-1)).column_width = 26
-                ws_res.range((row+1, column-1)).row_height = 21
+                if column>1:
+                    ws_res.range((row+1, column-1)).api.WrapText = True  
+                    ws_res.range((row+1, column-1)).column_width = 26
+                    ws_res.range((row+1, column-1)).row_height = 21
 
 
 
                 row=row+1
                 
-
+            ws_res.autofit(axis="columns")
+            ws_res.range((1, 1)).column_width = 10
             # 2. transpose the data onto a seperate  worksheet
 
             # collect data
@@ -246,7 +277,13 @@ class TDMS_EXCEL():
         col=startcolumn
         
         if len(data) <= (Const.EXCEL_MAX_CHUNK_SIZE + 1):
-            ws.range((row, col)).value = data
+
+            if transp: 
+                ws.range((row,col)).options(transpose=True).value = data
+                # print(row)
+            else: 
+                ws.range((row,col)).value = data
+
         else:
             for chunk in (data[rw:rw + Const.EXCEL_MAX_CHUNK_SIZE] 
                 for rw in range(0, len(data), Const.EXCEL_MAX_CHUNK_SIZE)):
@@ -257,6 +294,7 @@ class TDMS_EXCEL():
                         # print(row)
                     else: 
                         ws.range((row,col)).value = chunk
+
                     row += Const.EXCEL_MAX_CHUNK_SIZE
 
         # print("!!")
@@ -395,13 +433,20 @@ class TDMS_EXCEL():
             lieferzeiten=[]
 
             
-            for p in rpm_part:
-                revs.append(np.mean(p)*1000./60.*len(p)/1000.)
-                lieferzeiten.append(len(p)/1000.)
+            for k,p in enumerate(rpm_part):
+                if np.mean(p)==0. or len(p)==0.:
+                    rpm_part.remove(p)
+                    current_part.pop(k)
+                else:
+                    revs.append(np.mean(p)*1000./60.*len(p)/1000.)
+                    lieferzeiten.append(len(p)/1000.)
 
-            'handle the case when only one signal is found'
+            
+                    #    'handle the case when only one signal is found'
+            RPM_LLZ_THRESHOLD=4000.
+            
             if len(revs)==1:
-                if revs[0]<3000: 
+                if revs[0]<RPM_LLZ_THRESHOLD: 
                     'Gewichtsverstellung'
                     revs.append(revs[0])
                     revs[0]=0
@@ -456,19 +501,19 @@ class TDMS_EXCEL():
                 rp=np.insert(rp,0," ")
                 rp=np.insert(rp,0,str(revs[i]))
                 rp=np.insert(rp,0,str(lieferzeiten[i]))
-                rp=np.insert(rp,0,str(np.max(current_part[i])))
-
-                if i%2==0: 
-                    temp_arr.append(["Umdrehungen, Filter A " + str(int(i/2))]+rp.tolist())
+                rp=np.insert(rp,0,str(pd.Series(current_part[i][2000:]).rolling(100).mean().max()))  # discard the first 2000 ms
+        
+                if revs[i]>RPM_LLZ_THRESHOLD: 
+                    temp_arr.append(["Umdrehungen, Filter LLZ " + str(int(i/2))]+rp.tolist())
                 else: 
-                    temp_arr.append(["Umdrehungen, Filter B " + str(int(i/2))]+rp.tolist())
+                    temp_arr.append(["Umdrehungen, Filter GV " + str(int(i/2))]+rp.tolist())
             
 
             for i,sublist in enumerate(current_part):
-                    if i%2==0: 
-                        temp_arr.append(["Strom_LD_Ebene_2, Filter A "+ str(int(i/2))]+current_part[i].astype(str).tolist())
+                    if revs[i]>RPM_LLZ_THRESHOLD: 
+                        temp_arr.append(["Strom_LD_Ebene_2, Filter LLZ "+ str(int(i/2))]+current_part[i].astype(str).tolist())
                     else: 
-                        temp_arr.append(["Strom_LD_Ebene_2, Filter B "+ str(int(i/2))]+current_part[i].astype(str).tolist())
+                        temp_arr.append(["Strom_LD_Ebene_2, Filter GV "+ str(int(i/2))]+current_part[i].astype(str).tolist())
               
    
             # flat_list=[]
