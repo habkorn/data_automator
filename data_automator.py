@@ -1,18 +1,20 @@
 import sys, traceback
 import os
-import types
-import subprocess
+
 
 from TDMS_EXCEL import TDMS_EXCEL
 
-from PyQt5.QtWidgets import QApplication, QWidget, QComboBox,QListWidget, QListWidgetItem,QPushButton, QFileDialog, QVBoxLayout,QHBoxLayout, QLabel,QGridLayout,QSpacerItem, QSizePolicy
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QPlainTextEdit,QApplication, QWidget, QComboBox,QListWidget, QListWidgetItem,QPushButton, QFileDialog, QVBoxLayout,QHBoxLayout, QLabel,QSizePolicy
+# from PyQt5 import QtGui, QtWidgets
+from PyQt5.QtCore import QUrl,QStandardPaths
+from PyQt5.QtGui import QFont,QIcon
+
 from nptdms import TdmsFile
 import glob
 
 
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+# from PyQt5.QtCore import *
+# from PyQt5.QtGui import *
 
 import logging
 import time, json
@@ -27,14 +29,14 @@ import os.path
 class QTextEditLogger(logging.Handler):
     def __init__(self, parent):
         super().__init__()
-        self.widget = QtWidgets.QPlainTextEdit(parent)
+        self.widget = QPlainTextEdit(parent)
         # self.widget.setReadOnly(True)
 
     def emit(self, record):
         msg = self.format(record)
         self.widget.appendPlainText(msg)
         # Process events between short sleep periods
-        QtWidgets.QApplication.processEvents()
+        QApplication.processEvents()
         # time.sleep(0.1)
 
 
@@ -88,8 +90,8 @@ class CSI_AUTOMATOR(QWidget):
         self.selectedDir=None
         # self.resize(737, 596)
 
-        self.setWindowTitle("Data Automator V1.5.4")
-        self.setWindowIcon(QtGui.QIcon("icon.png"))
+        self.setWindowTitle("Data Automator V1.5.6")
+        self.setWindowIcon(QIcon("icon.png"))
 
         layout = QVBoxLayout()
         self.setLayout(layout)
@@ -365,7 +367,7 @@ class CSI_AUTOMATOR(QWidget):
                             csvFilepath=self.tdms_excel.convert_data_to_csv(featureName,self.selectedDir,tdmsFileName, tdms_file)
 
                             logging.info(" CSV File created in " + str(round(time.time()-startTimeLoadFile,1)) + "s : " + tdmsFileName.split(".tdms")[0] + "--" + featureName + ".txt ")
-                            QtWidgets.QApplication.processEvents()
+                            QApplication.processEvents()
 
                             excelDestPath=(self.selectedDir + "/"+ featureName +  "--" + tdmsFileName.split(".tdms")[0]  + ".xlsm").replace("#","_")
                             
@@ -386,7 +388,7 @@ class CSI_AUTOMATOR(QWidget):
                             
 
                             # Process events between short sleep periods
-                            QtWidgets.QApplication.processEvents()
+                            QApplication.processEvents()
                             # time.sleep(0.1)
                             logging.info(str(num)+ "/" + str(len(tdmsFiles)) + ": Create Excel file...")
 

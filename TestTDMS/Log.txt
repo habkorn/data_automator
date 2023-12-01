@@ -1,0 +1,26 @@
+2023-12-01 21:52:30,126 - INFO - Selected Dir: F:/ENTWICKLUNG/Software/data_automator/TestTDMS
+2023-12-01 21:52:30,160 - INFO - TDMS found:
+2023-12-01 21:52:30,166 - INFO - F:/ENTWICKLUNG/Software/data_automator/TestTDMS\CSI_FKT F2-F3 Z_0 MST2023110600_001_12V_DV5_Modul_20231117_073106.tdms
+2023-12-01 21:52:30,183 - INFO - 1 TDMS File(s) found.
+2023-12-01 21:52:30,187 - INFO - EXCEL Templates found in: F:\ENTWICKLUNG\Software\data_automator
+2023-12-01 21:52:30,214 - INFO - F:\ENTWICKLUNG\Software\data_automator\dist\TDMS_CSI_ExcelTemplates\12V F1.xlsm
+2023-12-01 21:52:30,218 - INFO - F:\ENTWICKLUNG\Software\data_automator\dist\TDMS_CSI_ExcelTemplates\12V F2-F3.xlsm
+2023-12-01 21:52:30,223 - INFO - F:\ENTWICKLUNG\Software\data_automator\dist\TDMS_CSI_ExcelTemplates\12V F2-F3_PUC.xlsm
+2023-12-01 21:52:30,231 - INFO - F:\ENTWICKLUNG\Software\data_automator\dist\TDMS_CSI_ExcelTemplates\24V F1.xlsm
+2023-12-01 21:52:30,235 - INFO - F:\ENTWICKLUNG\Software\data_automator\dist\TDMS_CSI_ExcelTemplates\24V F2-F3.xlsm
+2023-12-01 21:52:30,240 - INFO - F:\ENTWICKLUNG\Software\data_automator\dist\TDMS_CSI_ExcelTemplates\F2-F3 RPM.xlsm
+2023-12-01 21:52:30,246 - INFO - and ./Result_Collection_Template.xlsm
+2023-12-01 21:52:30,253 - INFO - 7 EXCEL Templates File(s) found.
+2023-12-01 21:52:30,263 - INFO - Template for 12V F2-F3 will be processed.
+2023-12-01 21:52:30,273 - INFO - Processing started, please wait...
+2023-12-01 21:52:30,280 - INFO -  
+2023-12-01 21:52:30,283 - INFO - -------------------
+2023-12-01 21:52:30,285 - INFO - File 1/1. Reading TDMS: CSI_FKT F2-F3 Z_0 MST2023110600_001_12V_DV5_Modul_20231117_073106.tdms
+2023-12-01 21:52:37,588 - INFO -  CSV File created in 7.3s : CSI_FKT F2-F3 Z_0 MST2023110600_001_12V_DV5_Modul_20231117_073106--12V F2-F3.txt 
+2023-12-01 21:52:39,673 - INFO - 1/1: Create Excel file...
+2023-12-01 21:54:48,592 - INFO - vbMacro successful.
+2023-12-01 21:55:05,665 - INFO - ...done in 147.6s : Filename: F:/ENTWICKLUNG/Software/data_automator/TestTDMS/12V F2-F3--CSI_FKT F2-F3 Z_0 MST2023110600_001_12V_DV5_Modul_20231117_073106.xlsm
+2023-12-01 21:55:05,682 - INFO -  
+2023-12-01 21:55:05,708 - INFO - ==============================
+2023-12-01 21:55:05,805 - INFO - Result Generation started. File: F:\ENTWICKLUNG\Software\data_automator\TestTDMS\Result_Collection--MST2023110600 -- 12V F2-F3.xlsm
+2023-12-01 21:55:35,119 - INFO - FINISHED and DONE.

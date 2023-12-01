@@ -1,24 +1,21 @@
 # class for TDMS data and Excel output
+
+from Util import InvalidFilePathLengthException, Const
 import logging,traceback,sys
 import numpy as np
 import pandas as pd
 import shutil
 import csv
-from Util import Const
-from Util import Functions as fnc
-from Util import InvalidFilePathLengthException
-import matplotlib.pyplot as plt
+# from Util import Const
 
-import subprocess
-import os
-from openpyxl import Workbook
-from openpyxl import load_workbook
-import time
-from pandas import ExcelWriter
-import openpyxl
+
+
+
+# from openpyxl import load_workbook
+
 import xlwings as xw
 from xlwings.utils import rgb_to_int
-from pathlib import Path
+
 
 class TDMS_EXCEL():
 
@@ -217,14 +214,14 @@ class TDMS_EXCEL():
             ws_res_t = wb.sheets('Result_transponiert')
             ws_res_t.range('A1').options(transpose=True).value=content_list
 
-            ws_res_t.range((14, 3),(27, 3)).api.Font.Color = rgb_to_int((0, 0, 255))
+            ws_res_t.range((16, 3),(29, 3)).api.Font.Color = rgb_to_int((0, 0, 255))
 
             for num_col in range(0, len(self.resultDict.keys())):
                 try:
                     val=ws_res_t.range((1, num_col+4)).value
                     ws_res_t.range((1, num_col+4)).add_hyperlink(val)  
-                # 14-27
-                    ws_res_t.range((14, num_col+4),(27, num_col+4)).api.Font.Color = rgb_to_int((0, 0, 255))
+                # 16-29
+                    ws_res_t.range((16, num_col+4),(29, num_col+4)).api.Font.Color = rgb_to_int((0, 0, 255))
 
                 except:
                     # do nothing
@@ -321,7 +318,11 @@ class TDMS_EXCEL():
 
         if featureName=="F2-F3 RPM": # reduce the columns and and limit the data
             
-            search_str=["Drehzahl","Strom_LD_Ebene_2"]
+            # search_str=["Drehzahl","Strom_LD_Ebene_2","Strom_LD_Ebene_1"]
+
+            CURRENT_SIG_NAME="Strom_LD_Ebene_1"
+
+            search_str=["Drehzahl",CURRENT_SIG_NAME]
             newHeaderList=[]
             temp_data_to_insert=[]
 
@@ -329,12 +330,12 @@ class TDMS_EXCEL():
                 kk=0
                 for item in data_from_csv[0]:
                     if  _str in item:
-                        idx_LD_AGD=[]
-                        [idx_LD_AGD.append(data[kkk][kk]) for kkk in range(0,len(data)-1)]
-                        idx_LD_AGD=[idx_LD_AGD]
-                        idx_LD_AGD=[list(i) for i in zip(*idx_LD_AGD)]
+                        idx_LLZ_GV=[]
+                        [idx_LLZ_GV.append(data[kkk][kk]) for kkk in range(0,len(data)-1)]
+                        idx_LLZ_GV=[idx_LLZ_GV]
+                        idx_LLZ_GV=[list(i) for i in zip(*idx_LLZ_GV)]
                         # del data_to_insert[:][kk]
-                        temp_data_to_insert.append(idx_LD_AGD)
+                        temp_data_to_insert.append(idx_LLZ_GV)
                     kk=kk+1
             
             temp_data_to_insert=[list(i) for i in zip(*temp_data_to_insert)]
@@ -492,7 +493,8 @@ class TDMS_EXCEL():
                 temp_arr.append(tp_flat_list[i].tolist())
 
             temp_arr[0]=["Drehzahl"]+temp_arr[0]
-            temp_arr[1]=["Strom_LD_Ebene_2"]+temp_arr[1]
+            temp_arr[1]=[CURRENT_SIG_NAME]+temp_arr[1]
+            # temp_arr[2]=["Strom_LD_Ebene_1"]+temp_arr[2]
             
             
             
@@ -511,9 +513,9 @@ class TDMS_EXCEL():
 
             for i,sublist in enumerate(current_part):
                     if revs[i]>RPM_LLZ_THRESHOLD: 
-                        temp_arr.append(["Strom_LD_Ebene_2, Filter LLZ "+ str(int(i/2))]+current_part[i].astype(str).tolist())
+                        temp_arr.append([CURRENT_SIG_NAME+", Filter LLZ "+ str(int(i/2))]+current_part[i].astype(str).tolist())
                     else: 
-                        temp_arr.append(["Strom_LD_Ebene_2, Filter GV "+ str(int(i/2))]+current_part[i].astype(str).tolist())
+                        temp_arr.append([CURRENT_SIG_NAME+", Filter GV "+ str(int(i/2))]+current_part[i].astype(str).tolist())
               
    
             # flat_list=[]
